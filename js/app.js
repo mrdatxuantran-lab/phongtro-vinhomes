@@ -228,9 +228,17 @@ function renderHome() {
                     ${activeRooms.map((room, index) => renderRoomCard(room, index)).join('')}
                 </div>
 
-                <div class="empty-state hidden" id="empty-state">
-                    <span class="material-symbols-rounded">search_off</span>
-                    <p>Không tìm thấy phòng trọ nào phù hợp</p>
+                <div class="contact-cta-banner" id="contact-cta-banner">
+                    <div class="cta-3d-frame">
+                        <div class="cta-icon-pulse">
+                            <span class="material-symbols-rounded">support_agent</span>
+                        </div>
+                        <p class="cta-main-text">Nếu bạn chưa tìm được phòng phù hợp với nhu cầu, liên hệ trực tiếp với <strong>Trần Xuân Đạt</strong> để tìm phòng nhé!</p>
+                        <a href="https://zalo.me/84965278868" target="_blank" rel="noopener" class="cta-zalo-link">
+                            <span class="material-symbols-rounded">chat</span>
+                            Zalo: 0965278868
+                        </a>
+                    </div>
                 </div>
             </div>
         `;
@@ -246,7 +254,6 @@ function renderHome() {
 
 function applyFilters() {
     const grid = document.getElementById('rooms-grid');
-    const emptyState = document.getElementById('empty-state');
     if (!grid) return;
 
     const cards = Array.from(grid.querySelectorAll('.room-card'));
@@ -275,10 +282,6 @@ function applyFilters() {
             });
         sortedCards.forEach(card => grid.appendChild(card));
     }
-
-    // Show/hide empty state
-    grid.style.display = visibleCount > 0 ? '' : 'none';
-    emptyState?.classList.toggle('hidden', visibleCount > 0);
 
     // Update filter button active states
     document.querySelectorAll('.filter-btn[data-filter]').forEach(btn => {
