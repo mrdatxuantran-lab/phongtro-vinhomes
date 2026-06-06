@@ -927,6 +927,14 @@ function openRoomForm(room) {
                     <textarea class="form-textarea" id="form-description" placeholder="Mô tả chi tiết về phòng trọ..." rows="5">${isEdit ? room.description : ''}</textarea>
                 </div>
 
+                <div class="form-group">
+                    <label class="form-label">
+                        <span class="material-symbols-rounded" style="font-size:16px;vertical-align:middle;margin-right:4px;color:var(--accent-2)">lock</span>
+                        Ghi chú nội bộ <small style="color:var(--text-muted);font-weight:400">(chỉ admin thấy)</small>
+                    </label>
+                    <textarea class="form-textarea" id="form-admin-note" placeholder="Ghi chú riêng cho bạn: tên khách, số điện thoại, tiền cọc..." rows="3" style="border-style:dashed;background:rgba(8,145,178,0.03)">${isEdit ? (room.adminNote || '') : ''}</textarea>
+                </div>
+
                 <!-- Image Upload -->
                 <div class="form-group">
                     <label class="form-label">Ảnh phòng trọ</label>
@@ -1197,6 +1205,7 @@ function saveRoomForm(editId, closeCallback) {
     const area = document.getElementById('form-area')?.value;
     const address = document.getElementById('form-address')?.value.trim();
     const description = document.getElementById('form-description')?.value.trim();
+    const adminNote = document.getElementById('form-admin-note')?.value.trim();
 
     // Validation
     if (!price || price <= 0) { showToast('Vui lòng nhập giá thuê hợp lệ', 'error'); return; }
@@ -1211,6 +1220,7 @@ function saveRoomForm(editId, closeCallback) {
         roomType,
         address,
         description: description || '',
+        adminNote: adminNote || '',
         images: formImages,
         video: formVideo,
     };
