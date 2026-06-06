@@ -167,9 +167,7 @@ h3 { font-size: 1.25rem; }
     letter-spacing: -0.03em;
 }
 
-.logo-accent {
-    color: var(--accent);
-}
+
 
 .nav-links {
     display: flex;
@@ -577,6 +575,23 @@ h3 { font-size: 1.25rem; }
 
 .cta-zalo-link .material-symbols-rounded {
     font-size: 20px;
+}
+
+/* ---------- Empty State (Admin placeholders) ---------- */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+}
+
+.empty-state .material-symbols-rounded {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.4;
+}
+
+.empty-state p {
+    font-size: 1rem;
 }
 
 /* ============================================

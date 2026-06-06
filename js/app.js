@@ -1,5 +1,5 @@
 // ============================================
-// PhòngTrọ.vn - Main Application
+// Tìm Phòng Trọ - Main Application
 // Router + Page Renderers + Event Handlers
 // ============================================
 

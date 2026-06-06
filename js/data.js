@@ -1,5 +1,5 @@
 // ============================================
-// PhòngTrọ.vn - Mock Data & CRUD Operations
+// Tìm Phòng Trọ - Mock Data & CRUD Operations
 // ============================================
 
 const STORAGE_KEY = 'phongtro_rooms';
@@ -20,7 +20,7 @@ function createPlaceholder(text, color1, color2, icon = '🏠') {
         <rect width="800" height="600" fill="url(#grid)"/>
         <text x="400" y="270" text-anchor="middle" font-size="72">${icon}</text>
         <text x="400" y="340" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="24" font-family="sans-serif" font-weight="600">${text}</text>
-        <text x="400" y="375" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="14" font-family="sans-serif">PhòngTrọ.vn</text>
+        <text x="400" y="375" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="14" font-family="sans-serif">Tìm Phòng Trọ</text>
     </svg>`;
     return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
