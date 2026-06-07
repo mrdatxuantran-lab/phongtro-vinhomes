@@ -165,81 +165,81 @@ async function renderHome() {
     const app = document.getElementById('app');
 
     // Show loading
-    if (!document.getElementById('rooms-grid')) {
-        app.innerHTML = '<div class="loading-spinner"><span class="material-symbols-rounded spinning">progress_activity</span><p>Đang tải phòng trọ...</p></div>';
-    }
+    app.innerHTML = '<div class="loading-spinner"><span class="material-symbols-rounded spinning">progress_activity</span><p>Đang tải phòng trọ...</p></div>';
 
-    const rooms = await getRooms();
+    let rooms = [];
+    try {
+        rooms = await getRooms();
+    } catch (err) {
+        console.error('Failed to load rooms:', err);
+    }
     const activeRooms = rooms.filter(r => !isExpired(r));
 
-    // Always re-render (data may have changed on another device)
-    {
-        app.innerHTML = `
-            <div class="container">
-                <div class="page-header">
-                    <h1 class="gradient-text">Tìm Phòng Trọ Phù Hợp</h1>
-                    <p>Tìm nhanh phòng trọ, studio và căn hộ phù hợp ngân sách. Cập nhật liên tục tình trạng phòng trống và thời gian có thể vào ở.</p>
+    app.innerHTML = `
+        <div class="container">
+            <div class="page-header">
+                <h1 class="gradient-text">Tìm Phòng Trọ Phù Hợp</h1>
+                <p>Tìm nhanh phòng trọ, studio và căn hộ phù hợp ngân sách. Cập nhật liên tục tình trạng phòng trống và thời gian có thể vào ở.</p>
+            </div>
+
+            <div class="filter-bar">
+                <div class="filter-section" id="filter-section">
+                    <button class="filter-btn active" data-filter="all">
+                        <span>Tất cả</span>
+                    </button>
+                    <button class="filter-btn" data-filter="Vin 1">
+                        <span>Vin 1</span>
+                    </button>
+                    <button class="filter-btn" data-filter="Vin 2">
+                        <span>Vin 2</span>
+                    </button>
+                    <button class="filter-btn" data-filter="Vin 3">
+                        <span>Vin 3</span>
+                    </button>
                 </div>
 
-                <div class="filter-bar">
-                    <div class="filter-section" id="filter-section">
-                        <button class="filter-btn active" data-filter="all">
-                            <span>Tất cả</span>
-                        </button>
-                        <button class="filter-btn" data-filter="Vin 1">
-                            <span>Vin 1</span>
-                        </button>
-                        <button class="filter-btn" data-filter="Vin 2">
-                            <span>Vin 2</span>
-                        </button>
-                        <button class="filter-btn" data-filter="Vin 3">
-                            <span>Vin 3</span>
-                        </button>
-                    </div>
-
-                    <div class="filter-section" id="type-filter-section">
-                        <button class="filter-btn filter-btn-type" data-type="studio">
-                            <span class="material-symbols-rounded" style="font-size:16px">apartment</span>
-                            <span>Studio</span>
-                        </button>
-                        <button class="filter-btn filter-btn-type" data-type="phongtro">
-                            <span class="material-symbols-rounded" style="font-size:16px">house</span>
-                            <span>Phòng trọ</span>
-                        </button>
-                    </div>
-
-                    <div class="price-sort-wrapper" id="price-sort-wrapper">
-                        <span class="material-symbols-rounded price-sort-icon">sort</span>
-                        <select class="price-sort-select" id="price-sort-select">
-                            <option value="default">Sắp xếp giá</option>
-                            <option value="asc">Giá thấp → cao</option>
-                            <option value="desc">Giá cao → thấp</option>
-                        </select>
-                    </div>
+                <div class="filter-section" id="type-filter-section">
+                    <button class="filter-btn filter-btn-type" data-type="studio">
+                        <span class="material-symbols-rounded" style="font-size:16px">apartment</span>
+                        <span>Studio</span>
+                    </button>
+                    <button class="filter-btn filter-btn-type" data-type="phongtro">
+                        <span class="material-symbols-rounded" style="font-size:16px">house</span>
+                        <span>Phòng trọ</span>
+                    </button>
                 </div>
 
-                <div class="rooms-grid" id="rooms-grid">
-                    ${activeRooms.map((room, index) => renderRoomCard(room, index)).join('')}
-                </div>
-
-                <div class="contact-cta-banner" id="contact-cta-banner">
-                    <div class="cta-3d-frame">
-                        <div class="cta-icon-pulse">
-                            <span class="material-symbols-rounded">support_agent</span>
-                        </div>
-                        <p class="cta-main-text">Nếu bạn chưa tìm được phòng phù hợp với nhu cầu, liên hệ trực tiếp với <strong>Trần Xuân Đạt</strong> để tìm phòng nhé!</p>
-                        <a href="https://zalo.me/84965278868" target="_blank" rel="noopener" class="cta-zalo-link">
-                            <span class="material-symbols-rounded">chat</span>
-                            Zalo: 0965278868
-                        </a>
-                    </div>
+                <div class="price-sort-wrapper" id="price-sort-wrapper">
+                    <span class="material-symbols-rounded price-sort-icon">sort</span>
+                    <select class="price-sort-select" id="price-sort-select">
+                        <option value="default">Sắp xếp giá</option>
+                        <option value="asc">Giá thấp → cao</option>
+                        <option value="desc">Giá cao → thấp</option>
+                    </select>
                 </div>
             </div>
-        `;
 
-        // Bind events
-        bindHomeEvents();
-    }
+            <div class="rooms-grid" id="rooms-grid">
+                ${activeRooms.map((room, index) => renderRoomCard(room, index)).join('')}
+            </div>
+
+            <div class="contact-cta-banner" id="contact-cta-banner">
+                <div class="cta-3d-frame">
+                    <div class="cta-icon-pulse">
+                        <span class="material-symbols-rounded">support_agent</span>
+                    </div>
+                    <p class="cta-main-text">Nếu bạn chưa tìm được phòng phù hợp với nhu cầu, liên hệ trực tiếp với <strong>Trần Xuân Đạt</strong> để tìm phòng nhé!</p>
+                    <a href="https://zalo.me/84965278868" target="_blank" rel="noopener" class="cta-zalo-link">
+                        <span class="material-symbols-rounded">chat</span>
+                        Zalo: 0965278868
+                    </a>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Bind events
+    bindHomeEvents();
 
     // Apply current filters instantly
     applyFilters();
@@ -360,7 +360,12 @@ async function renderDetail(id) {
     const app = document.getElementById('app');
     app.innerHTML = '<div class="loading-spinner"><span class="material-symbols-rounded spinning">progress_activity</span><p>Đang tải...</p></div>';
 
-    const room = await getRoomById(id);
+    let room = null;
+    try {
+        room = await getRoomById(id);
+    } catch (err) {
+        console.error('Failed to load room:', err);
+    }
     if (!room) {
         app.innerHTML = `
             <div class="container">
@@ -563,8 +568,15 @@ async function renderAdmin() {
     const app = document.getElementById('app');
     app.innerHTML = '<div class="loading-spinner"><span class="material-symbols-rounded spinning">progress_activity</span><p>Đang tải quản trị...</p></div>';
 
-    const rooms = await getRooms();
-    const contact = await getContactInfo();
+    let rooms = [];
+    let contact = { phone: '0965278868', zaloLink: 'https://zalo.me/84965278868' };
+    try {
+        rooms = await getRooms();
+        contact = await getContactInfo();
+    } catch (err) {
+        console.error('Failed to load admin data:', err);
+        showToast('Lỗi kết nối database. Vui lòng tải lại trang.', 'error');
+    }
 
     // Split rooms into active and expired
     const activeRooms = rooms.filter(r => !isExpired(r));
@@ -1302,23 +1314,33 @@ async function handleRoute() {
     // Instant scroll to top
     window.scrollTo(0, 0);
 
-    switch (route.page) {
-        case 'detail':
-            await renderDetail(route.params.id);
-            break;
-        case 'admin':
-            if (isAdminAuthenticated) {
-                await renderAdmin();
-            } else {
-                renderAdminLogin();
-            }
-            break;
-        default:
-            await renderHome();
+    try {
+        switch (route.page) {
+            case 'detail':
+                await renderDetail(route.params.id);
+                break;
+            case 'admin':
+                if (isAdminAuthenticated) {
+                    await renderAdmin();
+                } else {
+                    renderAdminLogin();
+                }
+                break;
+            default:
+                await renderHome();
+        }
+    } catch (err) {
+        console.error('Route error:', err);
+        const app = document.getElementById('app');
+        app.innerHTML = '<div class="loading-spinner"><span class="material-symbols-rounded">error</span><p>Đã xảy ra lỗi. Vui lòng tải lại trang.</p></div>';
     }
 
     // Show/hide floating contact buttons (hide on admin page)
-    await updateFloatingButtons(route.page);
+    try {
+        await updateFloatingButtons(route.page);
+    } catch (e) {
+        console.error('Floating buttons error:', e);
+    }
 }
 
 // ============ NAVBAR SCROLL EFFECT ============
