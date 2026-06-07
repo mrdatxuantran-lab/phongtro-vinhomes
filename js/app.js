@@ -3,7 +3,7 @@
 // Router + Page Renderers + Event Handlers
 // ============================================
 
-import { initData, getRooms, getRoomById, addRoom, updateRoom, deleteRoom, getContactInfo, saveContactInfo } from './data.js';
+import { initData, getRooms, getRoomById, addRoom, updateRoom, deleteRoom, getContactInfo, saveContactInfo, verifyAdmin, getNextRoomNumber } from './data.js';
 
 // ============ UTILITIES ============
 
@@ -24,23 +24,7 @@ function formatDate(dateStr) {
     return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-function getNextRoomNumber(type, excludeId = null) {
-    const rooms = getRooms();
-    let maxNum = 0;
-    rooms.forEach(r => {
-        if (r.roomType === type && r.id !== excludeId) {
-            const match = r.title.match(/(\d+)\s*$/);
-            if (match) {
-                maxNum = Math.max(maxNum, parseInt(match[1]));
-            }
-        }
-    });
-    // If no numbered rooms found, count existing rooms of this type
-    if (maxNum === 0) {
-        maxNum = rooms.filter(r => r.roomType === type && r.id !== excludeId).length;
-    }
-    return maxNum + 1;
-}
+// getNextRoomNumber is now imported from data.js (async)
 
 function showToast(message, type = 'success') {
     const container = document.getElementById('toast-container');
@@ -91,7 +75,6 @@ function updateActiveNav(page) {
 
 // ============ ADMIN AUTH ============
 
-const ADMIN_PASSWORD = 'admin123'; // Mock password - thay bằng đăng nhập thật sau
 let isAdminAuthenticated = sessionStorage.getItem('admin_auth') === 'true';
 
 function renderAdminLogin() {
@@ -145,20 +128,26 @@ function renderAdminLogin() {
     });
 
     // Login form submit
-    document.getElementById('admin-login-form')?.addEventListener('submit', (e) => {
+    document.getElementById('admin-login-form')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const password = document.getElementById('admin-password')?.value;
         const errorEl = document.getElementById('login-error');
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="material-symbols-rounded">hourglass_top</span> Đang xác thực...';
 
-        if (password === ADMIN_PASSWORD) {
+        const isValid = await verifyAdmin('admin', password);
+
+        if (isValid) {
             isAdminAuthenticated = true;
             sessionStorage.setItem('admin_auth', 'true');
             handleRoute();
         } else {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<span class="material-symbols-rounded">login</span> Đăng nhập';
             errorEl?.classList.remove('hidden');
             document.getElementById('admin-password').value = '';
             document.getElementById('admin-password').focus();
-            // Shake animation
             const card = document.querySelector('.admin-login-card');
             card?.classList.add('shake');
             setTimeout(() => card?.classList.remove('shake'), 500);
@@ -171,15 +160,20 @@ function renderAdminLogin() {
 let currentFilter = 'all';
 let currentTypeFilter = 'all'; // 'all' | 'studio' | 'phongtro'
 let currentPriceSort = 'default'; // 'default' | 'asc' | 'desc'
-let homeRendered = false;
 
-function renderHome() {
+async function renderHome() {
     const app = document.getElementById('app');
-    const rooms = getRooms();
+
+    // Show loading
+    if (!document.getElementById('rooms-grid')) {
+        app.innerHTML = '<div class="loading-spinner"><span class="material-symbols-rounded spinning">progress_activity</span><p>Đang tải phòng trọ...</p></div>';
+    }
+
+    const rooms = await getRooms();
     const activeRooms = rooms.filter(r => !isExpired(r));
 
-    // Only build the full page once
-    if (!homeRendered || !document.getElementById('rooms-grid')) {
+    // Always re-render (data may have changed on another device)
+    {
         app.innerHTML = `
             <div class="container">
                 <div class="page-header">
@@ -243,9 +237,8 @@ function renderHome() {
             </div>
         `;
 
-        // Bind events once
+        // Bind events
         bindHomeEvents();
-        homeRendered = true;
     }
 
     // Apply current filters instantly
@@ -363,10 +356,12 @@ function renderRoomCard(room, index) {
 let currentImageIndex = 0;
 let currentDetailImages = [];
 
-function renderDetail(id) {
-    const room = getRoomById(id);
+async function renderDetail(id) {
+    const app = document.getElementById('app');
+    app.innerHTML = '<div class="loading-spinner"><span class="material-symbols-rounded spinning">progress_activity</span><p>Đang tải...</p></div>';
+
+    const room = await getRoomById(id);
     if (!room) {
-        const app = document.getElementById('app');
         app.innerHTML = `
             <div class="container">
                 <div class="empty-state">
@@ -564,10 +559,12 @@ document.addEventListener('keydown', (e) => {
 
 // ============ ADMIN PAGE ============
 
-function renderAdmin() {
-    const rooms = getRooms();
-    const contact = getContactInfo();
+async function renderAdmin() {
     const app = document.getElementById('app');
+    app.innerHTML = '<div class="loading-spinner"><span class="material-symbols-rounded spinning">progress_activity</span><p>Đang tải quản trị...</p></div>';
+
+    const rooms = await getRooms();
+    const contact = await getContactInfo();
 
     // Split rooms into active and expired
     const activeRooms = rooms.filter(r => !isExpired(r));
@@ -716,27 +713,27 @@ function renderAdmin() {
 
     // ---- MANAGE TAB: Bind edit/delete ----
     document.querySelectorAll('#content-manage .btn-edit-room').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', async (e) => {
             e.stopPropagation();
             const id = parseInt(btn.dataset.roomId);
-            const room = getRoomById(id);
+            const room = await getRoomById(id);
             if (room) openRoomForm(room);
         });
     });
 
     document.querySelectorAll('#content-manage .btn-delete-room').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', async (e) => {
             e.stopPropagation();
             const id = parseInt(btn.dataset.roomId);
-            const room = getRoomById(id);
+            const room = await getRoomById(id);
             if (room) openDeleteConfirm(room);
         });
     });
 
     // Bind delete all expired
-    document.getElementById('btn-delete-all-expired')?.addEventListener('click', () => {
+    document.getElementById('btn-delete-all-expired')?.addEventListener('click', async () => {
         if (!confirm(`Bạn có chắc muốn xóa tất cả ${expiredRooms.length} phòng hết hạn?`)) return;
-        expiredRooms.forEach(r => deleteRoom(r.id));
+        for (const r of expiredRooms) { await deleteRoom(r.id); }
         showToast(`Đã xóa ${expiredRooms.length} phòng hết hạn!`, 'success');
         renderAdmin();
     });
@@ -750,19 +747,19 @@ function renderAdmin() {
 
     // Bind search tab edit/delete buttons
     document.querySelectorAll('#search-results-list .btn-edit-room').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', async (e) => {
             e.stopPropagation();
             const id = parseInt(btn.dataset.roomId);
-            const room = getRoomById(id);
+            const room = await getRoomById(id);
             if (room) openRoomForm(room);
         });
     });
 
     document.querySelectorAll('#search-results-list .btn-delete-room').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', async (e) => {
             e.stopPropagation();
             const id = parseInt(btn.dataset.roomId);
-            const room = getRoomById(id);
+            const room = await getRoomById(id);
             if (room) openDeleteConfirm(room);
         });
     });
@@ -802,12 +799,12 @@ function renderAdmin() {
     });
 
     // ---- CONTACT TAB: Bind save ----
-    document.getElementById('btn-save-contact')?.addEventListener('click', () => {
+    document.getElementById('btn-save-contact')?.addEventListener('click', async () => {
         const phone = document.getElementById('contact-phone')?.value.trim();
         const zaloLink = document.getElementById('contact-zalo')?.value.trim();
         if (!phone) { showToast('Vui lòng nhập số điện thoại', 'error'); return; }
         if (!zaloLink) { showToast('Vui lòng nhập link Zalo', 'error'); return; }
-        saveContactInfo({ phone, zaloLink });
+        await saveContactInfo({ phone, zaloLink });
         showToast('Đã lưu thông tin liên hệ thành công!', 'success');
     });
 }
@@ -1020,7 +1017,7 @@ function bindModalEvents(editId) {
 
     // Room type radio buttons → auto-generate title
     document.querySelectorAll('input[name="form-room-type"]').forEach(radio => {
-        radio.addEventListener('change', () => {
+        radio.addEventListener('change', async () => {
             // Update visual selection
             document.querySelectorAll('.type-radio-card').forEach(c => c.classList.remove('selected'));
             radio.closest('.type-radio-card').classList.add('selected');
@@ -1028,7 +1025,7 @@ function bindModalEvents(editId) {
             // Calculate next number
             const type = radio.value;
             const prefix = type === 'phongtro' ? 'Phòng trọ' : 'Phòng studio';
-            const nextNum = getNextRoomNumber(type, editId);
+            const nextNum = await getNextRoomNumber(type, editId);
             const generatedTitle = `${prefix} ${nextNum}`;
 
             // Update preview
@@ -1177,7 +1174,7 @@ function handleVideoFile(file) {
     reader.readAsDataURL(file);
 }
 
-function saveRoomForm(editId, closeCallback) {
+async function saveRoomForm(editId, closeCallback) {
     const preview = document.getElementById('title-auto-preview');
     const roomTypeRadio = document.querySelector('input[name="form-room-type"]:checked');
     const roomType = roomTypeRadio?.value || preview?.dataset?.roomType;
@@ -1190,14 +1187,14 @@ function saveRoomForm(editId, closeCallback) {
 
     if (editId !== null) {
         // Editing: keep original number if same type, recalculate if type changed
-        const existingRoom = getRoomById(editId);
+        const existingRoom = await getRoomById(editId);
         if (existingRoom && existingRoom.roomType === roomType) {
             title = existingRoom.title; // Keep original title
         } else {
-            title = `${prefix} ${getNextRoomNumber(roomType, editId)}`;
+            title = `${prefix} ${await getNextRoomNumber(roomType, editId)}`;
         }
     } else {
-        title = preview?.dataset?.title || `${prefix} ${getNextRoomNumber(roomType)}`;
+        title = preview?.dataset?.title || `${prefix} ${await getNextRoomNumber(roomType)}`;
     }
 
     const price = parseInt(document.getElementById('form-price')?.value);
@@ -1225,16 +1222,31 @@ function saveRoomForm(editId, closeCallback) {
         video: formVideo,
     };
 
-    if (editId !== null) {
-        updateRoom(editId, roomData);
-        showToast('Đã cập nhật phòng trọ thành công!', 'success');
-    } else {
-        addRoom(roomData);
-        showToast('Đã thêm phòng trọ mới thành công!', 'success');
+    // Show saving state
+    const submitBtn = document.querySelector('#room-form-container .btn-primary');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="material-symbols-rounded spinning">progress_activity</span> Đang lưu...';
     }
 
-    closeCallback();
-    renderAdmin();
+    try {
+        if (editId !== null) {
+            await updateRoom(editId, roomData);
+            showToast('Đã cập nhật phòng trọ thành công!', 'success');
+        } else {
+            await addRoom(roomData);
+            showToast('Đã thêm phòng trọ mới thành công!', 'success');
+        }
+        closeCallback();
+        renderAdmin();
+    } catch (err) {
+        console.error('Save error:', err);
+        showToast('Lỗi khi lưu phòng trọ. Vui lòng thử lại.', 'error');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<span class="material-symbols-rounded">save</span> Lưu phòng trọ';
+        }
+    }
 }
 
 // ============ DELETE CONFIRMATION ============
@@ -1269,8 +1281,8 @@ function openDeleteConfirm(room) {
     };
 
     document.getElementById('confirm-cancel')?.addEventListener('click', closeModal);
-    document.getElementById('confirm-delete')?.addEventListener('click', () => {
-        deleteRoom(room.id);
+    document.getElementById('confirm-delete')?.addEventListener('click', async () => {
+        await deleteRoom(room.id);
         closeModal();
         showToast('Đã xóa phòng trọ thành công!', 'success');
         renderAdmin();
@@ -1283,35 +1295,30 @@ function openDeleteConfirm(room) {
 
 // ============ ROUTE HANDLER ============
 
-function handleRoute() {
+async function handleRoute() {
     const route = getRoute();
     updateActiveNav(route.page);
 
     // Instant scroll to top
     window.scrollTo(0, 0);
 
-    // Reset home cache when navigating away (data may have changed in admin)
-    if (route.page !== 'home') {
-        homeRendered = false;
-    }
-
     switch (route.page) {
         case 'detail':
-            renderDetail(route.params.id);
+            await renderDetail(route.params.id);
             break;
         case 'admin':
             if (isAdminAuthenticated) {
-                renderAdmin();
+                await renderAdmin();
             } else {
                 renderAdminLogin();
             }
             break;
         default:
-            renderHome();
+            await renderHome();
     }
 
     // Show/hide floating contact buttons (hide on admin page)
-    updateFloatingButtons(route.page);
+    await updateFloatingButtons(route.page);
 }
 
 // ============ NAVBAR SCROLL EFFECT ============
@@ -1329,19 +1336,18 @@ window.addEventListener('scroll', () => {
 
 window.addEventListener('hashchange', handleRoute);
 
-window.addEventListener('DOMContentLoaded', () => {
-    initData();
-    updateFloatingButtons('home');
-    handleRoute();
+window.addEventListener('DOMContentLoaded', async () => {
+    await initData();
+    await updateFloatingButtons('home');
+    await handleRoute();
 });
 
 // ============ FLOATING CONTACT BUTTONS ============
 
-function updateFloatingButtons(page) {
+async function updateFloatingButtons(page) {
     const container = document.getElementById('floating-contact');
     if (!container) return;
 
-    // Hide on admin page
     if (page === 'admin') {
         container.classList.add('hidden');
         return;
@@ -1349,8 +1355,7 @@ function updateFloatingButtons(page) {
 
     container.classList.remove('hidden');
 
-    // Update links from saved contact info
-    const contact = getContactInfo();
+    const contact = await getContactInfo();
     const phoneBtn = document.getElementById('float-phone');
     const zaloBtn = document.getElementById('float-zalo');
 
