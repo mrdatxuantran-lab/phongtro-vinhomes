@@ -386,7 +386,7 @@ async function renderDetail(id) {
         ? `<img src="${currentDetailImages[0]}" alt="${room.title}" id="gallery-main-img">`
         : `<div class="no-image-placeholder"><span class="material-symbols-rounded">image</span><span>Chưa có ảnh</span></div>`;
 
-    const app = document.getElementById('app');
+
     app.innerHTML = `
         <div class="detail-page">
             <a href="#/" class="detail-back-btn" id="detail-back">
