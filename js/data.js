@@ -194,7 +194,7 @@ const defaultRooms = [
 
 // --- CRUD Operations ---
 
-const DATA_VERSION = 4; // Bump this when mock data structure changes
+const DATA_VERSION = 5; // Bump to force re-init on all devices
 const VERSION_KEY = 'phongtro_version';
 
 export function initData() {
