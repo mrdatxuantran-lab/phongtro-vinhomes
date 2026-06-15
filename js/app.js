@@ -173,6 +173,12 @@ let currentSearchQuery = ''; // search by address name
 async function renderHome() {
     const app = document.getElementById('app');
 
+    // Reset all filters when returning to home
+    currentFilter = 'all';
+    currentTypeFilter = 'all';
+    currentSearchQuery = '';
+    currentPriceSort = 'default';
+
     // Show loading
     app.innerHTML = '<div class="loading-spinner"><span class="material-symbols-rounded spinning">progress_activity</span><p>Đang tải phòng trọ...</p></div>';
 
