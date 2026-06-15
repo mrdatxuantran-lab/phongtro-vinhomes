@@ -286,7 +286,12 @@ export async function getNextRoomNumber(type, excludeId = null) {
 
 // ============ ANALYTICS ============
 
+function isAdmin() {
+    return sessionStorage.getItem('admin_auth') === 'true';
+}
+
 export async function trackPageView(page) {
+    if (isAdmin()) return; // Don't track admin views
     try {
         await supabase.from('page_views').insert({
             page,
@@ -299,6 +304,7 @@ export async function trackPageView(page) {
 }
 
 export async function trackClick(eventType, roomId = null) {
+    if (isAdmin()) return; // Don't track admin clicks
     try {
         await supabase.from('click_events').insert({
             event_type: eventType,
