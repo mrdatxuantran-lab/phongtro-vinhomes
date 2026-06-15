@@ -19,7 +19,7 @@ function isExpired(room) {
 }
 
 function formatDate(dateStr) {
-    if (!dateStr) return 'Chưa cập nhật';
+    if (!dateStr) return 'Có thể vào ở luôn';
     const d = new Date(dateStr);
     return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
