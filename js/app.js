@@ -193,7 +193,7 @@ async function renderHome() {
     app.innerHTML = `
         <div class="container">
             <div class="page-header">
-                <h1 class="gradient-text">Tìm Phòng Trọ Phù Hợp</h1>
+                <h1 class="gradient-text">Tìm Phòng Phù Hợp</h1>
                 <p>Tìm nhanh phòng trọ, studio và căn hộ phù hợp ngân sách. Cập nhật liên tục tình trạng phòng trống và thời gian có thể vào ở.</p>
             </div>
 
