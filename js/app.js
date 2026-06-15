@@ -158,7 +158,15 @@ function renderAdminLogin() {
 // ============ HOME PAGE ============
 
 let currentFilter = 'all';
-let currentTypeFilter = 'all'; // 'all' | 'studio' | 'phongtro'
+let currentTypeFilter = 'all'; // 'all' | 'studio' | 'phongtro' | 'nhanguyencan'
+
+function getRoomTypeName(type) {
+    switch(type) {
+        case 'phongtro': return 'Phòng trọ';
+        case 'nhanguyencan': return 'Nhà nguyên căn';
+        default: return 'Studio';
+    }
+}
 let currentPriceSort = 'default'; // 'default' | 'asc' | 'desc'
 
 async function renderHome() {
@@ -206,6 +214,10 @@ async function renderHome() {
                     <button class="filter-btn filter-btn-type" data-type="phongtro">
                         <span class="material-symbols-rounded" style="font-size:16px">house</span>
                         <span>Phòng trọ</span>
+                    </button>
+                    <button class="filter-btn filter-btn-type" data-type="nhanguyencan">
+                        <span class="material-symbols-rounded" style="font-size:16px">home</span>
+                        <span>Nhà nguyên căn</span>
                     </button>
                 </div>
 
@@ -459,7 +471,7 @@ async function renderDetail(id) {
                             <span class="material-symbols-rounded">home_work</span>
                             Loại phòng
                         </span>
-                        <span class="value"><span class="type-tag type-${room.roomType || 'studio'}" style="font-size: 0.85rem; padding: 4px 12px;">${room.roomType === 'phongtro' ? 'Phòng trọ' : 'Studio'}</span></span>
+                        <span class="value"><span class="type-tag type-${room.roomType || 'studio'}" style="font-size: 0.85rem; padding: 4px 12px;">${getRoomTypeName(room.roomType)}</span></span>
                     </div>
                     <div class="detail-info-item">
                         <span class="label">
@@ -836,7 +848,7 @@ function renderAdminRoomItem(room, expired = false) {
                 <div class="admin-room-meta">
                     <span class="price-text">${formatPrice(room.price)}/tháng</span>
                     <span class="area-text">${room.area}</span>
-                    <span class="type-tag type-${room.roomType || 'studio'}">${room.roomType === 'phongtro' ? 'Phòng trọ' : 'Studio'}</span>
+                    <span class="type-tag type-${room.roomType || 'studio'}">${getRoomTypeName(room.roomType)}</span>
                     <span class="${expired ? 'expired-date' : ''}">📅 ${formatDate(room.moveInDate)}</span>
                     <span>${room.images ? room.images.length : 0} ảnh</span>
                     <span>${room.video ? '🎬 Có video' : ''}</span>
@@ -893,6 +905,11 @@ function openRoomForm(room) {
                             <input type="radio" name="form-room-type" value="studio" ${isEdit && room.roomType === 'studio' ? 'checked' : ''}>
                             <span class="material-symbols-rounded">apartment</span>
                             <span>Phòng studio</span>
+                        </label>
+                        <label class="type-radio-card ${isEdit && room.roomType === 'nhanguyencan' ? 'selected' : ''}" id="radio-nhanguyencan">
+                            <input type="radio" name="form-room-type" value="nhanguyencan" ${isEdit && room.roomType === 'nhanguyencan' ? 'checked' : ''}>
+                            <span class="material-symbols-rounded">home</span>
+                            <span>Nhà nguyên căn</span>
                         </label>
                     </div>
                     <div class="title-auto-preview" id="title-auto-preview">
@@ -1046,7 +1063,7 @@ function bindModalEvents(editId) {
 
             // Calculate next number
             const type = radio.value;
-            const prefix = type === 'phongtro' ? 'Phòng trọ' : 'Phòng studio';
+            const prefix = getRoomTypeName(type);
             const nextNum = await getNextRoomNumber(type, editId);
             const generatedTitle = `${prefix} ${nextNum}`;
 
@@ -1272,7 +1289,7 @@ async function saveRoomForm(editId, closeCallback) {
     if (!roomType) { showToast('Vui lòng chọn loại phòng', 'error'); return; }
 
     // Generate title
-    const prefix = roomType === 'phongtro' ? 'Phòng trọ' : 'Phòng studio';
+    const prefix = getRoomTypeName(roomType);
     let title;
 
     if (editId !== null) {
