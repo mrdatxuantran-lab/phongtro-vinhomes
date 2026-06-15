@@ -1598,8 +1598,10 @@ async function handleRoute() {
         switch (route.page) {
             case 'detail':
                 await renderDetail(route.params.id);
-                trackPageView('detail:' + route.params.id);
-                trackClick('room_view', route.params.id);
+                if (!isAdminAuthenticated) {
+                    trackPageView('detail:' + route.params.id);
+                    trackClick('room_view', route.params.id);
+                }
                 break;
             case 'admin':
                 if (isAdminAuthenticated) {
@@ -1607,11 +1609,12 @@ async function handleRoute() {
                 } else {
                     renderAdminLogin();
                 }
-                trackPageView('admin');
                 break;
             default:
                 await renderHome();
-                trackPageView('home');
+                if (!isAdminAuthenticated) {
+                    trackPageView('home');
+                }
         }
     } catch (err) {
         console.error('Route error:', err);
