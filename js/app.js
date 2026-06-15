@@ -3,7 +3,7 @@
 // Router + Page Renderers + Event Handlers
 // ============================================
 
-import { initData, getRooms, getRoomById, addRoom, updateRoom, deleteRoom, getContactInfo, saveContactInfo, verifyAdmin, getNextRoomNumber } from './data.js';
+import { initData, getRooms, getRoomById, addRoom, updateRoom, deleteRoom, getContactInfo, saveContactInfo, verifyAdmin, getNextRoomNumber, trackPageView, trackClick, getAnalyticsSummary } from './data.js';
 
 // ============ UTILITIES ============
 
@@ -668,6 +668,10 @@ async function renderAdmin() {
                     <span class="material-symbols-rounded">contact_phone</span>
                     <span class="admin-tab-text">Cài đặt liên hệ</span>
                 </button>
+                <button class="admin-tab" id="tab-analytics" data-tab="analytics">
+                    <span class="material-symbols-rounded">analytics</span>
+                    <span class="admin-tab-text">Thống kê</span>
+                </button>
             </div>
 
             <!-- TAB CONTENT: Quản lý phòng -->
@@ -760,16 +764,30 @@ async function renderAdmin() {
                     </button>
                 </div>
             </div>
+
+            <!-- TAB CONTENT: Thống kê -->
+            <div class="admin-tab-content" id="content-analytics">
+                <div class="analytics-loading" id="analytics-loading">
+                    <div class="loading-spinner"><span class="material-symbols-rounded spinning">progress_activity</span><p>Đang tải thống kê...</p></div>
+                </div>
+                <div id="analytics-dashboard" style="display:none;"></div>
+            </div>
         </div>
     `;
 
     // ---- TAB SWITCHING ----
     const tabs = document.querySelectorAll('.admin-tab[data-tab]');
     const contents = document.querySelectorAll('.admin-tab-content');
+    let analyticsLoaded = false;
 
     function switchTab(tabName) {
         tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tabName));
         contents.forEach(c => c.classList.toggle('active', c.id === `content-${tabName}`));
+        // Load analytics on first open
+        if (tabName === 'analytics' && !analyticsLoaded) {
+            analyticsLoaded = true;
+            loadAnalyticsDashboard();
+        }
     }
 
     tabs.forEach(tab => {
@@ -912,6 +930,127 @@ function renderAdminRoomItem(room, expired = false) {
             </div>
         </div>
     `;
+}
+
+// ============ ANALYTICS DASHBOARD ============
+
+async function loadAnalyticsDashboard() {
+    const loading = document.getElementById('analytics-loading');
+    const dashboard = document.getElementById('analytics-dashboard');
+    if (!dashboard) return;
+
+    try {
+        const stats = await getAnalyticsSummary();
+
+        dashboard.innerHTML = `
+            <div class="analytics-grid">
+                <div class="analytics-card analytics-card-primary">
+                    <div class="analytics-card-icon">
+                        <span class="material-symbols-rounded">visibility</span>
+                    </div>
+                    <div class="analytics-card-content">
+                        <div class="analytics-card-value">${stats.totalViews.toLocaleString()}</div>
+                        <div class="analytics-card-label">Tổng lượt xem</div>
+                    </div>
+                </div>
+                <div class="analytics-card">
+                    <div class="analytics-card-icon" style="background:rgba(34,197,94,0.12);color:#22c55e;">
+                        <span class="material-symbols-rounded">today</span>
+                    </div>
+                    <div class="analytics-card-content">
+                        <div class="analytics-card-value">${stats.todayViews.toLocaleString()}</div>
+                        <div class="analytics-card-label">Hôm nay</div>
+                    </div>
+                </div>
+                <div class="analytics-card">
+                    <div class="analytics-card-icon" style="background:rgba(249,115,22,0.12);color:#f97316;">
+                        <span class="material-symbols-rounded">date_range</span>
+                    </div>
+                    <div class="analytics-card-content">
+                        <div class="analytics-card-value">${stats.weekViews.toLocaleString()}</div>
+                        <div class="analytics-card-label">7 ngày qua</div>
+                    </div>
+                </div>
+                <div class="analytics-card">
+                    <div class="analytics-card-icon" style="background:rgba(139,92,246,0.12);color:#8b5cf6;">
+                        <span class="material-symbols-rounded">calendar_month</span>
+                    </div>
+                    <div class="analytics-card-content">
+                        <div class="analytics-card-value">${stats.monthViews.toLocaleString()}</div>
+                        <div class="analytics-card-label">30 ngày qua</div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin: 28px 0 16px; color: var(--text-primary); font-size: 1.05rem;">
+                <span class="material-symbols-rounded" style="vertical-align:middle;margin-right:6px;">ads_click</span>
+                Lượt click liên hệ
+            </h3>
+            <div class="analytics-grid analytics-grid-3">
+                <div class="analytics-card">
+                    <div class="analytics-card-icon" style="background:rgba(6,182,212,0.12);color:#06b6d4;">
+                        <span class="material-symbols-rounded">chat</span>
+                    </div>
+                    <div class="analytics-card-content">
+                        <div class="analytics-card-value">${stats.zaloClicks.toLocaleString()}</div>
+                        <div class="analytics-card-label">Click Zalo</div>
+                    </div>
+                </div>
+                <div class="analytics-card">
+                    <div class="analytics-card-icon" style="background:rgba(34,197,94,0.12);color:#22c55e;">
+                        <span class="material-symbols-rounded">call</span>
+                    </div>
+                    <div class="analytics-card-content">
+                        <div class="analytics-card-value">${stats.phoneClicks.toLocaleString()}</div>
+                        <div class="analytics-card-label">Click gọi điện</div>
+                    </div>
+                </div>
+                <div class="analytics-card">
+                    <div class="analytics-card-icon" style="background:rgba(249,115,22,0.12);color:#f97316;">
+                        <span class="material-symbols-rounded">pageview</span>
+                    </div>
+                    <div class="analytics-card-content">
+                        <div class="analytics-card-value">${stats.roomViews.toLocaleString()}</div>
+                        <div class="analytics-card-label">Lượt xem phòng</div>
+                    </div>
+                </div>
+            </div>
+
+            ${stats.topRoomsList.length > 0 ? `
+            <h3 style="margin: 28px 0 16px; color: var(--text-primary); font-size: 1.05rem;">
+                <span class="material-symbols-rounded" style="vertical-align:middle;margin-right:6px;">trending_up</span>
+                Phòng được xem nhiều nhất (30 ngày)
+            </h3>
+            <div class="analytics-top-rooms">
+                ${stats.topRoomsList.map(([roomId, count], i) => `
+                    <div class="analytics-top-room-item">
+                        <span class="analytics-rank">#${i + 1}</span>
+                        <span class="analytics-room-id">Phòng ID: ${roomId.substring(0, 8)}...</span>
+                        <span class="analytics-room-count">${count} lượt xem</span>
+                    </div>
+                `).join('')}
+            </div>
+            ` : ''}
+
+            <button class="btn-primary" id="btn-refresh-analytics" style="margin-top: 20px;">
+                <span class="material-symbols-rounded">refresh</span>
+                Tải lại thống kê
+            </button>
+        `;
+
+        if (loading) loading.style.display = 'none';
+        dashboard.style.display = 'block';
+
+        document.getElementById('btn-refresh-analytics')?.addEventListener('click', () => {
+            if (loading) loading.style.display = 'block';
+            dashboard.style.display = 'none';
+            loadAnalyticsDashboard();
+        });
+
+    } catch (err) {
+        console.error('Analytics error:', err);
+        if (loading) loading.innerHTML = '<p style="color:var(--text-muted);text-align:center;">Chưa có dữ liệu thống kê. Hãy chạy SQL tạo bảng page_views và click_events trước.</p>';
+    }
 }
 
 // ============ ROOM FORM MODAL ============
@@ -1459,6 +1598,8 @@ async function handleRoute() {
         switch (route.page) {
             case 'detail':
                 await renderDetail(route.params.id);
+                trackPageView('detail:' + route.params.id);
+                trackClick('room_view', route.params.id);
                 break;
             case 'admin':
                 if (isAdminAuthenticated) {
@@ -1466,9 +1607,11 @@ async function handleRoute() {
                 } else {
                     renderAdminLogin();
                 }
+                trackPageView('admin');
                 break;
             default:
                 await renderHome();
+                trackPageView('home');
         }
     } catch (err) {
         console.error('Route error:', err);
@@ -1524,8 +1667,10 @@ async function updateFloatingButtons(page) {
 
     if (phoneBtn && contact.phone) {
         phoneBtn.href = `tel:${contact.phone}`;
+        phoneBtn.addEventListener('click', () => trackClick('phone_click'));
     }
     if (zaloBtn && contact.zaloLink) {
         zaloBtn.href = contact.zaloLink;
+        zaloBtn.addEventListener('click', () => trackClick('zalo_click'));
     }
 }
