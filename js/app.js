@@ -914,8 +914,13 @@ function openRoomForm(room) {
                     </div>
                 </div>
 
+                <div class="form-group">
+                    <label class="form-label">Địa chỉ *</label>
+                    <input type="text" class="form-input" id="form-address" placeholder="VD: San Hô 9, Tòa S1.02" value="${isEdit ? room.address : ''}" required>
+                </div>
+
                 <div class="form-row">
-                    <div class="form-group">
+                    <div class="form-group" style="flex:1">
                         <label class="form-label">Khu vực *</label>
                         <select class="form-select" id="form-area" required>
                             <option value="" disabled ${!isEdit ? 'selected' : ''}>Chọn khu vực</option>
@@ -924,11 +929,16 @@ function openRoomForm(room) {
                             <option value="Vin 3" ${isEdit && room.area === 'Vin 3' ? 'selected' : ''}>Vin 3</option>
                         </select>
                     </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Địa chỉ *</label>
-                    <input type="text" class="form-input" id="form-address" placeholder="VD: Tòa S1.02, Vinhomes Grand Park" value="${isEdit ? room.address : ''}" required>
+                    <div class="form-group" style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;">
+                        <label class="auto-detect-toggle" style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:9px 0;">
+                            <span style="position:relative;display:inline-block;width:40px;height:22px;">
+                                <input type="checkbox" id="auto-detect-area" checked style="opacity:0;width:0;height:0;">
+                                <span class="auto-detect-slider" style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#ccd5e0;border-radius:22px;transition:0.3s;"></span>
+                            </span>
+                            <span style="font-size:0.82rem;color:var(--text-secondary);">Tự quét khu vực</span>
+                        </label>
+                        <div id="area-detect-result" style="font-size:0.78rem;color:var(--accent-light);min-height:18px;margin-top:2px;"></div>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -1049,6 +1059,74 @@ function bindModalEvents(editId) {
             }
         });
     });
+
+    // ===== AUTO-DETECT AREA FROM ADDRESS =====
+    const areaMap = {
+        'Vin 2': ['chà là', 'cha la', 'kinh đô ánh sáng', 'kinh do anh sang', 'san hô', 'san ho', 'cọ xanh', 'co xanh', 'hải âu', 'hai au', 'đảo dừa', 'dao dua', 'sao biển', 'sao bien', 'ngọc trai', 'ngoc trai'],
+        'Vin 3': ['phố biển', 'pho bien', 'thời đại', 'thoi dai', 'vịnh thiên đường', 'vinh thien duong', 'vịnh tây', 'vinh tay', 'vịnh xanh', 'vinh xanh', 'ánh dương', 'anh duong', 'hải đăng', 'hai dang', 'đảo ngọc', 'dao ngoc']
+    };
+
+    function detectAreaFromAddress(address) {
+        const normalized = address.toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove diacritics
+            .replace(/đ/g, 'd').replace(/Đ/g, 'D');
+        const rawLower = address.toLowerCase();
+
+        for (const [area, keywords] of Object.entries(areaMap)) {
+            for (const keyword of keywords) {
+                const keyNorm = keyword.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
+                // Match keyword at word boundary, ignore trailing numbers/spaces
+                const regex = new RegExp('(^|[\\s,.])'  + keyNorm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(\\s|\\d|,|\\.|$)', 'i');
+                if (regex.test(normalized) || rawLower.includes(keyword)) {
+                    // Find the matching original keyword for display
+                    const displayKeyword = keyword.charAt(0).toUpperCase() + keyword.slice(1);
+                    return { area, keyword: displayKeyword };
+                }
+            }
+        }
+        return null;
+    }
+
+    const addressInput = document.getElementById('form-address');
+    const areaSelect = document.getElementById('form-area');
+    const autoDetectCheckbox = document.getElementById('auto-detect-area');
+    const detectResult = document.getElementById('area-detect-result');
+
+    autoDetectCheckbox?.addEventListener('change', () => {
+        if (autoDetectCheckbox.checked && addressInput?.value) {
+            runAutoDetect(addressInput.value);
+        } else if (detectResult) {
+            detectResult.textContent = '';
+        }
+    });
+
+    function runAutoDetect(value) {
+        if (!autoDetectCheckbox?.checked) return;
+        const result = detectAreaFromAddress(value);
+        if (result && areaSelect) {
+            areaSelect.value = result.area;
+            if (detectResult) {
+                detectResult.innerHTML = `<span class="material-symbols-rounded" style="font-size:14px;vertical-align:middle;">check_circle</span> Nhận diện: <strong>${result.keyword}</strong> → ${result.area}`;
+                detectResult.style.color = '#059669';
+            }
+        } else if (detectResult) {
+            if (value.trim()) {
+                detectResult.innerHTML = `<span class="material-symbols-rounded" style="font-size:14px;vertical-align:middle;">info</span> Không nhận diện được khu vực`;
+                detectResult.style.color = 'var(--text-muted)';
+            } else {
+                detectResult.textContent = '';
+            }
+        }
+    }
+
+    addressInput?.addEventListener('input', (e) => {
+        runAutoDetect(e.target.value);
+    });
+
+    // Run detection on load if editing
+    if (editId && addressInput?.value) {
+        runAutoDetect(addressInput.value);
+    }
 
     // Trigger preview if editing
     const checkedRadio = document.querySelector('input[name="form-room-type"]:checked');

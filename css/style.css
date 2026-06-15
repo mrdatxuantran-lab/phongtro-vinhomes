@@ -2513,3 +2513,43 @@ h3 { font-size: 1.25rem; }
         grid-template-columns: 1fr;
     }
 }
+
+/* ============ AUTO-DETECT AREA TOGGLE ============ */
+
+.auto-detect-toggle {
+    user-select: none;
+}
+
+.auto-detect-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #ccd5e0;
+    border-radius: 22px;
+    transition: 0.3s;
+}
+
+.auto-detect-slider::before {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    left: 3px;
+    bottom: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: 0.3s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+#auto-detect-area:checked + .auto-detect-slider {
+    background: #0891b2;
+}
+
+#auto-detect-area:checked + .auto-detect-slider::before {
+    transform: translateX(18px);
+}
+
+#area-detect-result {
+    transition: color 0.2s;
+}
