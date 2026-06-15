@@ -1425,6 +1425,72 @@ h3 { font-size: 1.25rem; }
     gap: 4px;
 }
 
+/* ============ SEARCH ADDRESS ============ */
+
+.search-address-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: 380px;
+    margin: 10px auto 0;
+}
+
+.search-address-icon {
+    position: absolute;
+    left: 14px;
+    color: var(--text-muted);
+    font-size: 20px;
+    pointer-events: none;
+}
+
+.search-address-input {
+    width: 100%;
+    padding: 10px 40px 10px 42px;
+    border: 2px solid var(--glass-border);
+    border-radius: 50px;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-size: 0.88rem;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+.search-address-input:focus {
+    border-color: var(--accent-light);
+    box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.12);
+}
+
+.search-address-input::placeholder {
+    color: var(--text-muted);
+    font-size: 0.82rem;
+}
+
+.search-clear-btn {
+    position: absolute;
+    right: 8px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s;
+}
+
+.search-clear-btn:hover {
+    background: rgba(0,0,0,0.08);
+    color: var(--text-primary);
+}
+
+.search-clear-btn.hidden {
+    display: none;
+}
+
 .admin-room-actions {
     display: flex;
     gap: 8px;

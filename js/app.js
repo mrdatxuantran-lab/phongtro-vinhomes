@@ -168,6 +168,7 @@ function getRoomTypeName(type) {
     }
 }
 let currentPriceSort = 'default'; // 'default' | 'asc' | 'desc'
+let currentSearchQuery = ''; // search by address name
 
 async function renderHome() {
     const app = document.getElementById('app');
@@ -221,6 +222,14 @@ async function renderHome() {
                     </button>
                 </div>
 
+                <div class="search-address-wrapper" id="search-address-wrapper">
+                    <span class="material-symbols-rounded search-address-icon">search</span>
+                    <input type="text" class="search-address-input" id="search-address-input" placeholder="Tìm khu vực: VD Thời Đại, San Hô..." autocomplete="off">
+                    <button class="search-clear-btn hidden" id="search-clear-btn">
+                        <span class="material-symbols-rounded" style="font-size:18px">close</span>
+                    </button>
+                </div>
+
                 <div class="price-sort-wrapper" id="price-sort-wrapper">
                     <span class="material-symbols-rounded price-sort-icon">sort</span>
                     <select class="price-sort-select" id="price-sort-select">
@@ -265,13 +274,33 @@ function applyFilters() {
     let visibleCount = 0;
 
     // Show/hide cards based on filters
+    // Normalize search query: strip diacritics + numbers for matching
+    const searchNorm = currentSearchQuery
+        .toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd')
+        .replace(/[0-9]+/g, '')
+        .trim();
+
     cards.forEach(card => {
         const area = card.dataset.area;
         const type = card.dataset.type;
+        const address = card.dataset.address || '';
         const matchArea = currentFilter === 'all' || area === currentFilter;
         const matchType = currentTypeFilter === 'all' || type === currentTypeFilter;
-        const visible = matchArea && matchType;
 
+        // Match search: normalize address, strip numbers, compare
+        let matchSearch = true;
+        if (searchNorm) {
+            const addrNorm = address
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .replace(/đ/g, 'd')
+                .replace(/[0-9]+/g, '')
+                .trim();
+            matchSearch = addrNorm.includes(searchNorm);
+        }
+
+        const visible = matchArea && matchType && matchSearch;
         card.style.display = visible ? '' : 'none';
         if (visible) visibleCount++;
     });
@@ -324,6 +353,23 @@ function bindHomeEvents() {
         applyFilters();
     });
 
+    // Address search
+    const searchInput = document.getElementById('search-address-input');
+    const clearBtn = document.getElementById('search-clear-btn');
+
+    searchInput?.addEventListener('input', (e) => {
+        currentSearchQuery = e.target.value;
+        clearBtn?.classList.toggle('hidden', !currentSearchQuery);
+        applyFilters();
+    });
+
+    clearBtn?.addEventListener('click', () => {
+        if (searchInput) searchInput.value = '';
+        currentSearchQuery = '';
+        clearBtn.classList.add('hidden');
+        applyFilters();
+    });
+
     // Card clicks
     document.querySelectorAll('.room-card').forEach(card => {
         card.addEventListener('click', () => {
@@ -338,7 +384,7 @@ function renderRoomCard(room, index) {
         : null;
 
     return `
-        <div class="room-card animate-card" data-room-id="${room.id}" data-area="${room.area}" data-type="${room.roomType || 'studio'}" data-price="${room.price}" style="animation-delay: ${index * 0.08}s" id="room-card-${room.id}">
+        <div class="room-card animate-card" data-room-id="${room.id}" data-area="${room.area}" data-type="${room.roomType || 'studio'}" data-price="${room.price}" data-address="${(room.address || '').toLowerCase()}" style="animation-delay: ${index * 0.08}s" id="room-card-${room.id}">
             <div class="room-card-image watermark">
                 ${thumbnail
                     ? `<img src="${thumbnail}" alt="${room.title}" loading="lazy">`
