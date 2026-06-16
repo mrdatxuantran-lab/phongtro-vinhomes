@@ -1655,7 +1655,61 @@ window.addEventListener('DOMContentLoaded', async () => {
     await initData();
     await updateFloatingButtons('home');
     await handleRoute();
+    showWelcomePopup();
 });
+
+// ============ WELCOME POPUP ============
+
+function showWelcomePopup() {
+    // Don't show for admin or if already shown this session
+    if (isAdminAuthenticated) return;
+    if (sessionStorage.getItem('welcome_shown')) return;
+    sessionStorage.setItem('welcome_shown', 'true');
+
+    const popup = document.createElement('div');
+    popup.className = 'welcome-popup';
+    popup.innerHTML = `
+        <div class="welcome-popup-card">
+            <button class="welcome-close" id="welcome-close-btn">
+                <span class="material-symbols-rounded">close</span>
+            </button>
+            <div class="welcome-emoji">👋</div>
+            <h3>Xin chào mọi người!</h3>
+            <p>Chào mừng đến với <strong>Tìm Nhà của Trần Xuân Đạt</strong>.</p>
+            <p>Mọi người tìm kiếm phòng, nếu chưa được phòng ưng ý nhắn tin Zalo em Đạt để nhận nhiều phòng hơn nha.</p>
+            <p class="welcome-thanks">Cám ơn mọi người ❤️</p>
+            <a href="https://zalo.me/84965278868" target="_blank" rel="noopener" class="welcome-zalo-btn">
+                <span class="material-symbols-rounded">chat</span>
+                Nhắn Zalo Đạt
+            </a>
+            <div class="welcome-timer-bar" id="welcome-timer-bar"></div>
+        </div>
+    `;
+
+    document.body.appendChild(popup);
+
+    // Auto close after 10s
+    let timer = setTimeout(() => closeWelcome(popup), 10000);
+
+    // Close button
+    popup.querySelector('#welcome-close-btn').addEventListener('click', () => {
+        clearTimeout(timer);
+        closeWelcome(popup);
+    });
+
+    // Click overlay to close
+    popup.addEventListener('click', (e) => {
+        if (e.target === popup) {
+            clearTimeout(timer);
+            closeWelcome(popup);
+        }
+    });
+}
+
+function closeWelcome(popup) {
+    popup.classList.add('welcome-closing');
+    setTimeout(() => popup.remove(), 400);
+}
 
 // ============ FLOATING CONTACT BUTTONS ============
 
