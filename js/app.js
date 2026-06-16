@@ -1655,7 +1655,11 @@ window.addEventListener('DOMContentLoaded', async () => {
     await initData();
     await updateFloatingButtons('home');
     await handleRoute();
-    showWelcomePopup();
+});
+
+// Welcome popup fires independently
+window.addEventListener('load', () => {
+    setTimeout(() => showWelcomePopup(), 800);
 });
 
 // ============ WELCOME POPUP ============
