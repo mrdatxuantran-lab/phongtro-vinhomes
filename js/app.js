@@ -1680,7 +1680,7 @@ function showWelcomePopup() {
             <div class="welcome-emoji">👋</div>
             <h3>Xin chào mọi người!</h3>
             <p>Chào mừng đến với <strong>Tìm Nhà của Trần Xuân Đạt</strong>.</p>
-            <p>Mọi người tìm kiếm phòng, nếu chưa được phòng ưng ý nhắn tin Zalo em Đạt để nhận nhiều phòng hơn nha.</p>
+            <p>Mọi người tìm kiếm phòng, nếu chưa tìm được phòng ưng ý nhắn tin Zalo em Đạt để nhận nhiều phòng hơn nha.</p>
             <p class="welcome-thanks">Cám ơn mọi người ❤️</p>
             <a href="https://zalo.me/84965278868" target="_blank" rel="noopener" class="welcome-zalo-btn">
                 <span class="material-symbols-rounded">chat</span>
