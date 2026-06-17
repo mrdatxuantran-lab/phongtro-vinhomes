@@ -877,7 +877,8 @@ async function renderAdmin() {
         items.forEach(item => {
             const title = item.querySelector('h3')?.textContent.toLowerCase() || '';
             const meta = item.querySelector('.admin-room-meta')?.textContent.toLowerCase() || '';
-            const match = title.includes(query) || meta.includes(query);
+            const addr = item.dataset.address?.toLowerCase() || '';
+            const match = title.includes(query) || meta.includes(query) || addr.includes(query);
             item.style.display = match ? '' : 'none';
             if (match) visibleCount++;
         });
@@ -906,7 +907,7 @@ async function renderAdmin() {
 function renderAdminRoomItem(room, expired = false) {
     const thumb = room.images && room.images.length > 0 ? room.images[0] : null;
     return `
-        <div class="admin-room-item ${expired ? 'admin-room-expired' : ''}" id="admin-item-${room.id}">
+        <div class="admin-room-item ${expired ? 'admin-room-expired' : ''}" id="admin-item-${room.id}" data-address="${room.address || ''}">
             <div class="admin-room-thumb">
                 ${thumb
                     ? `<img src="${thumb}" alt="${room.title}">`
@@ -918,6 +919,7 @@ function renderAdminRoomItem(room, expired = false) {
                 <div class="admin-room-meta">
                     <span class="price-text">${formatPrice(room.price)}/tháng</span>
                     <span class="area-text">${room.area}</span>
+                    ${room.address ? `<span>📍 ${room.address}</span>` : ''}
                     <span class="type-tag type-${room.roomType || 'studio'}">${getRoomTypeName(room.roomType)}</span>
                     <span class="${expired ? 'expired-date' : ''}">📅 ${formatDate(room.moveInDate)}</span>
                     <span>${room.images ? room.images.length : 0} ảnh</span>
