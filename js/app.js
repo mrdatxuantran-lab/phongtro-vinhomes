@@ -687,9 +687,9 @@ async function renderAdmin() {
                     <div class="admin-filter-group">
                         <span class="admin-filter-label">Loại phòng:</span>
                         <button class="admin-filter-btn active" data-filter-type="all">Tất cả</button>
-                        <button class="admin-filter-btn" data-filter-type="phong-tro">Phòng trọ</button>
+                        <button class="admin-filter-btn" data-filter-type="phongtro">Phòng trọ</button>
                         <button class="admin-filter-btn" data-filter-type="studio">Studio</button>
-                        <button class="admin-filter-btn" data-filter-type="nha-nguyen-can">Nhà nguyên căn</button>
+                        <button class="admin-filter-btn" data-filter-type="nhanguyencan">Nhà nguyên căn</button>
                     </div>
                     <div class="admin-filter-group">
                         <span class="admin-filter-label">Khu vực:</span>
@@ -831,10 +831,11 @@ async function renderAdmin() {
         const items = document.querySelectorAll('#content-manage .admin-room-item');
         let visibleActive = 0, visibleExpired = 0;
         items.forEach(item => {
-            const type = item.dataset.roomType || '';
-            const area = item.dataset.roomArea || '';
+            const type = (item.dataset.roomType || '').trim();
+            const area = (item.dataset.roomArea || '').trim().toLowerCase();
+            const filterArea = adminFilterArea.trim().toLowerCase();
             const typeMatch = adminFilterType === 'all' || type === adminFilterType;
-            const areaMatch = adminFilterArea === 'all' || area === adminFilterArea;
+            const areaMatch = adminFilterArea === 'all' || area === filterArea;
             const show = typeMatch && areaMatch;
             item.style.display = show ? '' : 'none';
             if (show) {
