@@ -158,12 +158,13 @@ function renderAdminLogin() {
 // ============ HOME PAGE ============
 
 let currentFilter = 'all';
-let currentTypeFilter = 'all'; // 'all' | 'studio' | 'phongtro' | 'nhanguyencan'
+let currentTypeFilter = 'all'; // 'all' | 'studio' | 'phongtro' | 'nhanguyencan' | 'dulich'
 
 function getRoomTypeName(type) {
     switch(type) {
         case 'phongtro': return 'Phòng trọ';
         case 'nhanguyencan': return 'Nhà nguyên căn';
+        case 'dulich': return 'Phòng du lịch';
         default: return 'Studio';
     }
 }
@@ -194,7 +195,7 @@ async function renderHome() {
         <div class="container">
             <div class="page-header">
                 <h1 class="gradient-text">Tìm Phòng Phù Hợp</h1>
-                <p>Tìm nhanh phòng trọ, studio và căn hộ phù hợp ngân sách. Cập nhật liên tục tình trạng phòng trống và thời gian có thể vào ở.</p>
+                <p>Tìm nhanh phòng trọ, studio, căn hộ và phòng du lịch phù hợp ngân sách. Cập nhật liên tục tình trạng phòng trống và thời gian có thể vào ở.</p>
             </div>
 
             <div class="filter-bar">
@@ -225,6 +226,10 @@ async function renderHome() {
                     <button class="filter-btn filter-btn-type" data-type="nhanguyencan">
                         <span class="material-symbols-rounded" style="font-size:16px">home</span>
                         <span>Nhà nguyên căn</span>
+                    </button>
+                    <button class="filter-btn filter-btn-type" data-type="dulich">
+                        <span class="material-symbols-rounded" style="font-size:16px">beach_access</span>
+                        <span>Thuê phòng du lịch</span>
                     </button>
                 </div>
 
@@ -690,6 +695,7 @@ async function renderAdmin() {
                         <button class="admin-filter-btn" data-filter-type="phongtro">Phòng trọ</button>
                         <button class="admin-filter-btn" data-filter-type="studio">Studio</button>
                         <button class="admin-filter-btn" data-filter-type="nhanguyencan">Nhà nguyên căn</button>
+                        <button class="admin-filter-btn" data-filter-type="dulich">Du lịch</button>
                     </div>
                     <div class="admin-filter-group">
                         <span class="admin-filter-label">Khu vực:</span>
@@ -1206,6 +1212,11 @@ function openRoomForm(room) {
                             <input type="radio" name="form-room-type" value="nhanguyencan" ${isEdit && room.roomType === 'nhanguyencan' ? 'checked' : ''}>
                             <span class="material-symbols-rounded">home</span>
                             <span>Nhà nguyên căn</span>
+                        </label>
+                        <label class="type-radio-card ${isEdit && room.roomType === 'dulich' ? 'selected' : ''}" id="radio-dulich">
+                            <input type="radio" name="form-room-type" value="dulich" ${isEdit && room.roomType === 'dulich' ? 'checked' : ''}>
+                            <span class="material-symbols-rounded">beach_access</span>
+                            <span>Phòng du lịch</span>
                         </label>
                     </div>
                     <div class="title-auto-preview" id="title-auto-preview">

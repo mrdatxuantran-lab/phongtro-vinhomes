@@ -1420,6 +1420,11 @@ h3 { font-size: 1.25rem; }
     color: #22c55e;
 }
 
+.type-dulich {
+    background: rgba(168, 85, 247, 0.15);
+    color: #a855f7;
+}
+
 /* Type filter buttons style */
 .filter-btn-type {
     gap: 4px;
