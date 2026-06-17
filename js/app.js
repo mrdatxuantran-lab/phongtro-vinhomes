@@ -1061,9 +1061,11 @@ async function loadAnalyticsDashboard() {
         }
 
         const now = new Date();
-        const todaySince = now.toISOString().split('T')[0] + 'T00:00:00';
-        const weekSince = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
-        const monthSince = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString();
+        // Use LOCAL midnight (Vietnam timezone), not UTC
+        const localMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const todaySince = localMidnight.toISOString();
+        const weekSince = new Date(localMidnight.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+        const monthSince = new Date(localMidnight.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
         const periods = {
             today: { label: 'Hôm nay', since: todaySince },
