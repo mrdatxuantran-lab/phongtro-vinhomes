@@ -830,19 +830,23 @@ async function renderAdmin() {
     function applyManageFilters() {
         const items = document.querySelectorAll('#content-manage .admin-room-item');
         let visibleActive = 0, visibleExpired = 0;
+        console.log('[AdminFilter] type:', adminFilterType, 'area:', adminFilterArea, 'items:', items.length);
         items.forEach(item => {
-            const type = (item.dataset.roomType || '').trim();
-            const area = (item.dataset.roomArea || '').trim().toLowerCase();
-            const filterArea = adminFilterArea.trim().toLowerCase();
+            const type = (item.getAttribute('data-room-type') || '').trim();
+            const area = (item.getAttribute('data-room-area') || '').trim();
             const typeMatch = adminFilterType === 'all' || type === adminFilterType;
-            const areaMatch = adminFilterArea === 'all' || area === filterArea;
+            const areaMatch = adminFilterArea === 'all' || area.toLowerCase() === adminFilterArea.toLowerCase();
             const show = typeMatch && areaMatch;
+            if (!show) {
+                console.log('[AdminFilter] HIDDEN:', item.id, 'type:', JSON.stringify(type), 'area:', JSON.stringify(area));
+            }
             item.style.display = show ? '' : 'none';
             if (show) {
                 if (item.classList.contains('admin-room-expired')) visibleExpired++;
                 else visibleActive++;
             }
         });
+        console.log('[AdminFilter] visible active:', visibleActive, 'expired:', visibleExpired);
     }
 
     document.querySelectorAll('[data-filter-type]').forEach(btn => {
