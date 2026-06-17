@@ -321,53 +321,43 @@ export async function getAnalyticsSummary() {
     const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
     const monthAgo = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-    // Total page views
     const { count: totalViews } = await supabase
         .from('page_views').select('*', { count: 'exact', head: true });
-
-    // Today views
     const { count: todayViews } = await supabase
         .from('page_views').select('*', { count: 'exact', head: true })
         .gte('created_at', today + 'T00:00:00');
-
-    // Week views
     const { count: weekViews } = await supabase
         .from('page_views').select('*', { count: 'exact', head: true })
         .gte('created_at', weekAgo);
-
-    // Month views
     const { count: monthViews } = await supabase
         .from('page_views').select('*', { count: 'exact', head: true })
         .gte('created_at', monthAgo);
 
-    // Click events summary
     const { count: zaloClicks } = await supabase
         .from('click_events').select('*', { count: 'exact', head: true })
         .eq('event_type', 'zalo_click');
-
     const { count: phoneClicks } = await supabase
         .from('click_events').select('*', { count: 'exact', head: true })
         .eq('event_type', 'phone_click');
-
     const { count: roomViews } = await supabase
         .from('click_events').select('*', { count: 'exact', head: true })
         .eq('event_type', 'room_view');
 
-    // Top viewed rooms (last 30 days)
-    const { data: topRooms } = await supabase
+    // All room view events
+    const { data: allRoomClicks } = await supabase
         .from('click_events')
-        .select('room_id')
+        .select('room_id, created_at')
         .eq('event_type', 'room_view')
-        .gte('created_at', monthAgo)
         .not('room_id', 'is', null);
 
-    const roomCounts = {};
-    (topRooms || []).forEach(r => {
-        roomCounts[r.room_id] = (roomCounts[r.room_id] || 0) + 1;
-    });
-    const topRoomsList = Object.entries(roomCounts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5);
+    function countByPeriod(events, since) {
+        const counts = {};
+        (events || []).forEach(r => {
+            if (since && r.created_at < since) return;
+            counts[r.room_id] = (counts[r.room_id] || 0) + 1;
+        });
+        return Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    }
 
     return {
         totalViews: totalViews || 0,
@@ -377,6 +367,11 @@ export async function getAnalyticsSummary() {
         zaloClicks: zaloClicks || 0,
         phoneClicks: phoneClicks || 0,
         roomViews: roomViews || 0,
-        topRoomsList,
+        topRoomsAll: countByPeriod(allRoomClicks, null),
+        topRoomsToday: countByPeriod(allRoomClicks, today + 'T00:00:00'),
+        topRoomsWeek: countByPeriod(allRoomClicks, weekAgo),
+        topRoomsMonth: countByPeriod(allRoomClicks, monthAgo),
     };
 }
+
+

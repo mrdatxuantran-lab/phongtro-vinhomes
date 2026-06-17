@@ -1031,6 +1031,29 @@ async function loadAnalyticsDashboard() {
     try {
         const stats = await getAnalyticsSummary();
 
+        // Get all rooms for name lookup
+        let allRooms = [];
+        try { allRooms = await getRooms(); } catch (e) {}
+        const roomMap = {};
+        allRooms.forEach(r => { roomMap[String(r.id)] = r.title; });
+
+        function getRoomName(roomId) {
+            return roomMap[String(roomId)] || `Phòng ID: ${String(roomId).substring(0, 8)}`;
+        }
+
+        function renderTopRoomsList(list) {
+            if (!list || list.length === 0) return '<p style="color:var(--text-muted);text-align:center;padding:20px;">Chưa có dữ liệu.</p>';
+            return `<div class="analytics-top-rooms">
+                ${list.map(([roomId, count], i) => `
+                    <div class="analytics-top-room-item">
+                        <span class="analytics-rank">#${i + 1}</span>
+                        <span class="analytics-room-id">${getRoomName(roomId)}</span>
+                        <span class="analytics-room-count">${count} lượt xem</span>
+                    </div>
+                `).join('')}
+            </div>`;
+        }
+
         dashboard.innerHTML = `
             <div class="analytics-grid">
                 <div class="analytics-card analytics-card-primary">
@@ -1105,21 +1128,19 @@ async function loadAnalyticsDashboard() {
                 </div>
             </div>
 
-            ${stats.topRoomsList.length > 0 ? `
             <h3 style="margin: 28px 0 16px; color: var(--text-primary); font-size: 1.05rem;">
                 <span class="material-symbols-rounded" style="vertical-align:middle;margin-right:6px;">trending_up</span>
-                Phòng được xem nhiều nhất (30 ngày)
+                Phòng được xem nhiều nhất
             </h3>
-            <div class="analytics-top-rooms">
-                ${stats.topRoomsList.map(([roomId, count], i) => `
-                    <div class="analytics-top-room-item">
-                        <span class="analytics-rank">#${i + 1}</span>
-                        <span class="analytics-room-id">Phòng ID: ${roomId.substring(0, 8)}...</span>
-                        <span class="analytics-room-count">${count} lượt xem</span>
-                    </div>
-                `).join('')}
+            <div class="analytics-period-toggle" id="analytics-period-toggle">
+                <button class="admin-filter-btn" data-period="today">Hôm nay</button>
+                <button class="admin-filter-btn" data-period="week">7 ngày</button>
+                <button class="admin-filter-btn active" data-period="month">30 ngày</button>
+                <button class="admin-filter-btn" data-period="all">Tất cả</button>
             </div>
-            ` : ''}
+            <div id="analytics-top-rooms-container">
+                ${renderTopRoomsList(stats.topRoomsMonth)}
+            </div>
 
             <button class="btn-primary" id="btn-refresh-analytics" style="margin-top: 20px;">
                 <span class="material-symbols-rounded">refresh</span>
@@ -1129,6 +1150,21 @@ async function loadAnalyticsDashboard() {
 
         if (loading) loading.style.display = 'none';
         dashboard.style.display = 'block';
+
+        // Period toggle
+        const periodData = {
+            today: stats.topRoomsToday,
+            week: stats.topRoomsWeek,
+            month: stats.topRoomsMonth,
+            all: stats.topRoomsAll,
+        };
+        document.querySelectorAll('#analytics-period-toggle [data-period]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#analytics-period-toggle [data-period]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('analytics-top-rooms-container').innerHTML = renderTopRoomsList(periodData[btn.dataset.period]);
+            });
+        });
 
         document.getElementById('btn-refresh-analytics')?.addEventListener('click', () => {
             if (loading) loading.style.display = 'block';
