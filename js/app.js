@@ -704,27 +704,23 @@ async function renderAdmin() {
                 <div class="admin-section-label">
                     <span class="material-symbols-rounded" style="color: var(--success);">check_circle</span>
                     Phòng đang hoạt động
-                    <span class="admin-count-badge">${activeRooms.length}</span>
+                    <span class="admin-count-badge" id="admin-active-count">${activeRooms.length}</span>
                 </div>
-                ${activeRooms.length > 0 ? `
-                <div class="admin-room-list" id="admin-active-list">
+                <div class="admin-room-list" id="admin-active-list" ${activeRooms.length === 0 ? 'style="display:none"' : ''}>
                     ${activeRooms.map(room => renderAdminRoomItem(room, false)).join('')}
                 </div>
-                ` : `
-                <div class="empty-state" style="padding: 40px 20px;">
+                <div class="empty-state" id="admin-active-empty" style="padding: 40px 20px;${activeRooms.length > 0 ? 'display:none' : ''}">
                     <span class="material-symbols-rounded">inventory_2</span>
-                    <p>Chưa có phòng trọ nào đang hoạt động.</p>
+                    <p>Không có phòng nào phù hợp bộ lọc.</p>
                 </div>
-                `}
 
                 <!-- Expired Rooms -->
-                ${expiredRooms.length > 0 ? `
-                <div class="admin-section expired-section" style="margin-top: 28px;">
+                <div class="admin-section expired-section" id="admin-expired-section" style="margin-top: 28px;${expiredRooms.length === 0 ? 'display:none' : ''}">
                     <div class="admin-section-header">
                         <div class="admin-section-label" style="margin-bottom: 0;">
                             <span class="material-symbols-rounded" style="color: var(--danger);">schedule</span>
                             Phòng hết hạn vào ở
-                            <span class="admin-count-badge expired-badge">${expiredRooms.length}</span>
+                            <span class="admin-count-badge expired-badge" id="admin-expired-count">${expiredRooms.length}</span>
                         </div>
                         <button class="btn-danger" id="btn-delete-all-expired">
                             <span class="material-symbols-rounded" style="font-size: 16px;">delete_sweep</span>
@@ -738,7 +734,6 @@ async function renderAdmin() {
                         ${expiredRooms.map(room => renderAdminRoomItem(room, true)).join('')}
                     </div>
                 </div>
-                ` : ''}
             </div>
 
             <!-- TAB CONTENT: Tìm kiếm phòng -->
@@ -828,25 +823,66 @@ async function renderAdmin() {
     let adminFilterArea = 'all';
 
     function applyManageFilters() {
-        const items = document.querySelectorAll('#content-manage .admin-room-item');
-        let visibleActive = 0, visibleExpired = 0;
-        console.log('[AdminFilter] type:', adminFilterType, 'area:', adminFilterArea, 'items:', items.length);
-        items.forEach(item => {
-            const type = (item.getAttribute('data-room-type') || '').trim();
-            const area = (item.getAttribute('data-room-area') || '').trim();
-            const typeMatch = adminFilterType === 'all' || type === adminFilterType;
-            const areaMatch = adminFilterArea === 'all' || area.toLowerCase() === adminFilterArea.toLowerCase();
-            const show = typeMatch && areaMatch;
-            if (!show) {
-                console.log('[AdminFilter] HIDDEN:', item.id, 'type:', JSON.stringify(type), 'area:', JSON.stringify(area));
-            }
-            item.style.display = show ? '' : 'none';
-            if (show) {
-                if (item.classList.contains('admin-room-expired')) visibleExpired++;
-                else visibleActive++;
-            }
+        // Filter from original rooms array
+        const filteredActive = activeRooms.filter(r => {
+            const typeMatch = adminFilterType === 'all' || (r.roomType || 'studio') === adminFilterType;
+            const areaMatch = adminFilterArea === 'all' || (r.area || '') === adminFilterArea;
+            return typeMatch && areaMatch;
         });
-        console.log('[AdminFilter] visible active:', visibleActive, 'expired:', visibleExpired);
+        const filteredExpired = expiredRooms.filter(r => {
+            const typeMatch = adminFilterType === 'all' || (r.roomType || 'studio') === adminFilterType;
+            const areaMatch = adminFilterArea === 'all' || (r.area || '') === adminFilterArea;
+            return typeMatch && areaMatch;
+        });
+
+        // Re-render active list
+        const activeList = document.getElementById('admin-active-list');
+        const activeEmpty = document.getElementById('admin-active-empty');
+        if (activeList) {
+            activeList.innerHTML = filteredActive.map(room => renderAdminRoomItem(room, false)).join('');
+            activeList.style.display = filteredActive.length > 0 ? '' : 'none';
+        }
+        if (activeEmpty) activeEmpty.style.display = filteredActive.length > 0 ? 'none' : '';
+
+        // Re-render expired list
+        const expiredSection = document.getElementById('admin-expired-section');
+        const expiredList = document.getElementById('admin-expired-list');
+        if (expiredSection) {
+            if (filteredExpired.length > 0) {
+                expiredSection.style.display = '';
+                if (expiredList) expiredList.innerHTML = filteredExpired.map(room => renderAdminRoomItem(room, true)).join('');
+            } else {
+                expiredSection.style.display = 'none';
+            }
+        }
+
+        // Update counts
+        const activeCount = document.getElementById('admin-active-count');
+        if (activeCount) activeCount.textContent = filteredActive.length;
+        const expiredCount = document.getElementById('admin-expired-count');
+        if (expiredCount) expiredCount.textContent = filteredExpired.length;
+
+        // Re-bind edit/delete buttons
+        bindManageButtons();
+    }
+
+    function bindManageButtons() {
+        document.querySelectorAll('#content-manage .btn-edit-room').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const id = parseInt(btn.dataset.roomId);
+                const room = await getRoomById(id);
+                if (room) openRoomForm(room);
+            });
+        });
+        document.querySelectorAll('#content-manage .btn-delete-room').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const id = parseInt(btn.dataset.roomId);
+                const room = await getRoomById(id);
+                if (room) openDeleteConfirm(room);
+            });
+        });
     }
 
     document.querySelectorAll('[data-filter-type]').forEach(btn => {
@@ -866,25 +902,8 @@ async function renderAdmin() {
             applyManageFilters();
         });
     });
-
-    // ---- MANAGE TAB: Bind edit/delete ----
-    document.querySelectorAll('#content-manage .btn-edit-room').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            e.stopPropagation();
-            const id = parseInt(btn.dataset.roomId);
-            const room = await getRoomById(id);
-            if (room) openRoomForm(room);
-        });
-    });
-
-    document.querySelectorAll('#content-manage .btn-delete-room').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            e.stopPropagation();
-            const id = parseInt(btn.dataset.roomId);
-            const room = await getRoomById(id);
-            if (room) openDeleteConfirm(room);
-        });
-    });
+    // Initial bind for edit/delete buttons
+    bindManageButtons();
 
     // Bind delete all expired
     document.getElementById('btn-delete-all-expired')?.addEventListener('click', async () => {
