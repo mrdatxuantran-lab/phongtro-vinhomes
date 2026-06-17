@@ -1029,19 +1029,43 @@ async function loadAnalyticsDashboard() {
     if (!dashboard) return;
 
     try {
-        const stats = await getAnalyticsSummary();
+        const raw = await getAnalyticsSummary();
 
-        // Get all rooms for name lookup
+        // Get rooms for name lookup
         let allRooms = [];
         try { allRooms = await getRooms(); } catch (e) {}
         const roomMap = {};
         allRooms.forEach(r => { roomMap[String(r.id)] = r.title; });
 
-        function getRoomName(roomId) {
-            return roomMap[String(roomId)] || `Phòng ID: ${String(roomId).substring(0, 8)}`;
+        function getRoomName(id) {
+            return roomMap[String(id)] || `Phòng #${String(id).substring(0, 6)}`;
         }
 
-        function renderTopRoomsList(list) {
+        // Compute stats for a given period
+        function computeStats(since) {
+            const views = raw.allPageViews.filter(v => !since || v.created_at >= since);
+            const clicks = raw.allClicks.filter(c => !since || c.created_at >= since);
+            const zalo = clicks.filter(c => c.event_type === 'zalo_click').length;
+            const phone = clicks.filter(c => c.event_type === 'phone_click').length;
+            const roomClicks = clicks.filter(c => c.event_type === 'room_view' && c.room_id);
+            const roomCounts = {};
+            roomClicks.forEach(c => { roomCounts[c.room_id] = (roomCounts[c.room_id] || 0) + 1; });
+            const topRooms = Object.entries(roomCounts).sort((a, b) => b[1] - a[1]);
+            return { pageViews: views.length, zalo, phone, roomViews: roomClicks.length, topRooms };
+        }
+
+        const now = new Date();
+        const todaySince = now.toISOString().split('T')[0] + 'T00:00:00';
+        const weekSince = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
+        const monthSince = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+        const periods = {
+            today: { label: 'Hôm nay', since: todaySince },
+            week:  { label: '7 ngày qua', since: weekSince },
+            month: { label: '30 ngày qua', since: monthSince },
+        };
+
+        function renderTopRooms(list) {
             if (!list || list.length === 0) return '<p style="color:var(--text-muted);text-align:center;padding:20px;">Chưa có dữ liệu.</p>';
             return `<div class="analytics-top-rooms">
                 ${list.map(([roomId, count], i) => `
@@ -1054,130 +1078,92 @@ async function loadAnalyticsDashboard() {
             </div>`;
         }
 
-        dashboard.innerHTML = `
-            <div class="analytics-grid">
-                <div class="analytics-card analytics-card-primary">
-                    <div class="analytics-card-icon">
-                        <span class="material-symbols-rounded">visibility</span>
-                    </div>
-                    <div class="analytics-card-content">
-                        <div class="analytics-card-value">${stats.totalViews.toLocaleString()}</div>
-                        <div class="analytics-card-label">Tổng lượt xem</div>
-                    </div>
-                </div>
-                <div class="analytics-card">
-                    <div class="analytics-card-icon" style="background:rgba(34,197,94,0.12);color:#22c55e;">
-                        <span class="material-symbols-rounded">today</span>
-                    </div>
-                    <div class="analytics-card-content">
-                        <div class="analytics-card-value">${stats.todayViews.toLocaleString()}</div>
-                        <div class="analytics-card-label">Hôm nay</div>
-                    </div>
-                </div>
-                <div class="analytics-card">
-                    <div class="analytics-card-icon" style="background:rgba(249,115,22,0.12);color:#f97316;">
-                        <span class="material-symbols-rounded">date_range</span>
-                    </div>
-                    <div class="analytics-card-content">
-                        <div class="analytics-card-value">${stats.weekViews.toLocaleString()}</div>
-                        <div class="analytics-card-label">7 ngày qua</div>
-                    </div>
-                </div>
-                <div class="analytics-card">
-                    <div class="analytics-card-icon" style="background:rgba(139,92,246,0.12);color:#8b5cf6;">
-                        <span class="material-symbols-rounded">calendar_month</span>
-                    </div>
-                    <div class="analytics-card-content">
-                        <div class="analytics-card-value">${stats.monthViews.toLocaleString()}</div>
-                        <div class="analytics-card-label">30 ngày qua</div>
-                    </div>
-                </div>
-            </div>
+        function renderDashboard(periodKey) {
+            const p = periods[periodKey];
+            const s = computeStats(p.since);
 
-            <h3 style="margin: 28px 0 16px; color: var(--text-primary); font-size: 1.05rem;">
-                <span class="material-symbols-rounded" style="vertical-align:middle;margin-right:6px;">ads_click</span>
-                Lượt click liên hệ
-            </h3>
-            <div class="analytics-grid analytics-grid-3">
-                <div class="analytics-card">
-                    <div class="analytics-card-icon" style="background:rgba(6,182,212,0.12);color:#06b6d4;">
-                        <span class="material-symbols-rounded">chat</span>
-                    </div>
-                    <div class="analytics-card-content">
-                        <div class="analytics-card-value">${stats.zaloClicks.toLocaleString()}</div>
-                        <div class="analytics-card-label">Click Zalo</div>
-                    </div>
+            dashboard.innerHTML = `
+                <div class="analytics-period-toggle" id="analytics-period-toggle">
+                    <button class="admin-filter-btn ${periodKey === 'today' ? 'active' : ''}" data-period="today">Hôm nay</button>
+                    <button class="admin-filter-btn ${periodKey === 'week' ? 'active' : ''}" data-period="week">7 ngày qua</button>
+                    <button class="admin-filter-btn ${periodKey === 'month' ? 'active' : ''}" data-period="month">30 ngày qua</button>
                 </div>
-                <div class="analytics-card">
-                    <div class="analytics-card-icon" style="background:rgba(34,197,94,0.12);color:#22c55e;">
-                        <span class="material-symbols-rounded">call</span>
-                    </div>
-                    <div class="analytics-card-content">
-                        <div class="analytics-card-value">${stats.phoneClicks.toLocaleString()}</div>
-                        <div class="analytics-card-label">Click gọi điện</div>
-                    </div>
-                </div>
-                <div class="analytics-card">
-                    <div class="analytics-card-icon" style="background:rgba(249,115,22,0.12);color:#f97316;">
-                        <span class="material-symbols-rounded">pageview</span>
-                    </div>
-                    <div class="analytics-card-content">
-                        <div class="analytics-card-value">${stats.roomViews.toLocaleString()}</div>
-                        <div class="analytics-card-label">Lượt xem phòng</div>
-                    </div>
-                </div>
-            </div>
 
-            <h3 style="margin: 28px 0 16px; color: var(--text-primary); font-size: 1.05rem;">
-                <span class="material-symbols-rounded" style="vertical-align:middle;margin-right:6px;">trending_up</span>
-                Phòng được xem nhiều nhất
-            </h3>
-            <div class="analytics-period-toggle" id="analytics-period-toggle">
-                <button class="admin-filter-btn" data-period="today">Hôm nay</button>
-                <button class="admin-filter-btn" data-period="week">7 ngày</button>
-                <button class="admin-filter-btn active" data-period="month">30 ngày</button>
-                <button class="admin-filter-btn" data-period="all">Tất cả</button>
-            </div>
-            <div id="analytics-top-rooms-container">
-                ${renderTopRoomsList(stats.topRoomsMonth)}
-            </div>
+                <div class="analytics-grid">
+                    <div class="analytics-card analytics-card-primary">
+                        <div class="analytics-card-icon">
+                            <span class="material-symbols-rounded">visibility</span>
+                        </div>
+                        <div class="analytics-card-content">
+                            <div class="analytics-card-value">${s.pageViews.toLocaleString()}</div>
+                            <div class="analytics-card-label">Lượt truy cập</div>
+                        </div>
+                    </div>
+                    <div class="analytics-card">
+                        <div class="analytics-card-icon" style="background:rgba(6,182,212,0.12);color:#06b6d4;">
+                            <span class="material-symbols-rounded">chat</span>
+                        </div>
+                        <div class="analytics-card-content">
+                            <div class="analytics-card-value">${s.zalo.toLocaleString()}</div>
+                            <div class="analytics-card-label">Click Zalo</div>
+                        </div>
+                    </div>
+                    <div class="analytics-card">
+                        <div class="analytics-card-icon" style="background:rgba(34,197,94,0.12);color:#22c55e;">
+                            <span class="material-symbols-rounded">call</span>
+                        </div>
+                        <div class="analytics-card-content">
+                            <div class="analytics-card-value">${s.phone.toLocaleString()}</div>
+                            <div class="analytics-card-label">Click gọi điện</div>
+                        </div>
+                    </div>
+                    <div class="analytics-card">
+                        <div class="analytics-card-icon" style="background:rgba(249,115,22,0.12);color:#f97316;">
+                            <span class="material-symbols-rounded">pageview</span>
+                        </div>
+                        <div class="analytics-card-content">
+                            <div class="analytics-card-value">${s.roomViews.toLocaleString()}</div>
+                            <div class="analytics-card-label">Lượt xem phòng</div>
+                        </div>
+                    </div>
+                </div>
 
-            <button class="btn-primary" id="btn-refresh-analytics" style="margin-top: 20px;">
-                <span class="material-symbols-rounded">refresh</span>
-                Tải lại thống kê
-            </button>
-        `;
+                <h3 style="margin: 28px 0 16px; color: var(--text-primary); font-size: 1.05rem;">
+                    <span class="material-symbols-rounded" style="vertical-align:middle;margin-right:6px;">trending_up</span>
+                    Phòng được xem nhiều nhất — ${p.label}
+                </h3>
+                ${renderTopRooms(s.topRooms)}
+
+                <button class="btn-primary" id="btn-refresh-analytics" style="margin-top: 20px;">
+                    <span class="material-symbols-rounded">refresh</span>
+                    Tải lại thống kê
+                </button>
+            `;
+
+            // Bind period buttons
+            document.querySelectorAll('#analytics-period-toggle [data-period]').forEach(btn => {
+                btn.addEventListener('click', () => renderDashboard(btn.dataset.period));
+            });
+
+            // Bind refresh
+            document.getElementById('btn-refresh-analytics')?.addEventListener('click', () => {
+                if (loading) loading.style.display = 'block';
+                dashboard.style.display = 'none';
+                loadAnalyticsDashboard();
+            });
+        }
 
         if (loading) loading.style.display = 'none';
         dashboard.style.display = 'block';
 
-        // Period toggle
-        const periodData = {
-            today: stats.topRoomsToday,
-            week: stats.topRoomsWeek,
-            month: stats.topRoomsMonth,
-            all: stats.topRoomsAll,
-        };
-        document.querySelectorAll('#analytics-period-toggle [data-period]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('#analytics-period-toggle [data-period]').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                document.getElementById('analytics-top-rooms-container').innerHTML = renderTopRoomsList(periodData[btn.dataset.period]);
-            });
-        });
-
-        document.getElementById('btn-refresh-analytics')?.addEventListener('click', () => {
-            if (loading) loading.style.display = 'block';
-            dashboard.style.display = 'none';
-            loadAnalyticsDashboard();
-        });
+        // Default: 30 ngày
+        renderDashboard('month');
 
     } catch (err) {
         console.error('Analytics error:', err);
-        if (loading) loading.innerHTML = '<p style="color:var(--text-muted);text-align:center;">Chưa có dữ liệu thống kê. Hãy chạy SQL tạo bảng page_views và click_events trước.</p>';
+        if (loading) loading.innerHTML = '<p style="color:var(--text-muted);text-align:center;">Chưa có dữ liệu thống kê.</p>';
     }
 }
-
 // ============ ROOM FORM MODAL ============
 
 let formImages = [];

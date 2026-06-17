@@ -316,62 +316,15 @@ export async function trackClick(eventType, roomId = null) {
 }
 
 export async function getAnalyticsSummary() {
-    const now = new Date();
-    const today = now.toISOString().split('T')[0];
-    const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
-    const monthAgo = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString();
+    // Fetch all page views
+    const { data: allPageViews } = await supabase
+        .from('page_views').select('created_at');
 
-    const { count: totalViews } = await supabase
-        .from('page_views').select('*', { count: 'exact', head: true });
-    const { count: todayViews } = await supabase
-        .from('page_views').select('*', { count: 'exact', head: true })
-        .gte('created_at', today + 'T00:00:00');
-    const { count: weekViews } = await supabase
-        .from('page_views').select('*', { count: 'exact', head: true })
-        .gte('created_at', weekAgo);
-    const { count: monthViews } = await supabase
-        .from('page_views').select('*', { count: 'exact', head: true })
-        .gte('created_at', monthAgo);
+    // Fetch all click events
+    const { data: allClicks } = await supabase
+        .from('click_events').select('event_type, room_id, created_at');
 
-    const { count: zaloClicks } = await supabase
-        .from('click_events').select('*', { count: 'exact', head: true })
-        .eq('event_type', 'zalo_click');
-    const { count: phoneClicks } = await supabase
-        .from('click_events').select('*', { count: 'exact', head: true })
-        .eq('event_type', 'phone_click');
-    const { count: roomViews } = await supabase
-        .from('click_events').select('*', { count: 'exact', head: true })
-        .eq('event_type', 'room_view');
-
-    // All room view events
-    const { data: allRoomClicks } = await supabase
-        .from('click_events')
-        .select('room_id, created_at')
-        .eq('event_type', 'room_view')
-        .not('room_id', 'is', null);
-
-    function countByPeriod(events, since) {
-        const counts = {};
-        (events || []).forEach(r => {
-            if (since && r.created_at < since) return;
-            counts[r.room_id] = (counts[r.room_id] || 0) + 1;
-        });
-        return Object.entries(counts).sort((a, b) => b[1] - a[1]);
-    }
-
-    return {
-        totalViews: totalViews || 0,
-        todayViews: todayViews || 0,
-        weekViews: weekViews || 0,
-        monthViews: monthViews || 0,
-        zaloClicks: zaloClicks || 0,
-        phoneClicks: phoneClicks || 0,
-        roomViews: roomViews || 0,
-        topRoomsAll: countByPeriod(allRoomClicks, null),
-        topRoomsToday: countByPeriod(allRoomClicks, today + 'T00:00:00'),
-        topRoomsWeek: countByPeriod(allRoomClicks, weekAgo),
-        topRoomsMonth: countByPeriod(allRoomClicks, monthAgo),
-    };
+    return { allPageViews: allPageViews || [], allClicks: allClicks || [] };
 }
 
 
