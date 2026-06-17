@@ -2734,6 +2734,68 @@ h3 { font-size: 1.25rem; }
     }
 }
 
+/* ============ ADMIN MANAGE FILTERS ============ */
+
+.admin-manage-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+}
+
+.admin-filter-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.admin-filter-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.admin-filter-btn {
+    padding: 6px 14px;
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.admin-filter-btn:hover {
+    border-color: var(--accent-light);
+    color: var(--accent-light);
+    background: rgba(8,145,178,0.06);
+}
+
+.admin-filter-btn.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+}
+
+@media (max-width: 600px) {
+    .admin-manage-filters {
+        gap: 8px;
+        padding: 12px;
+    }
+    .admin-filter-btn {
+        padding: 5px 10px;
+        font-size: 0.78rem;
+    }
+}
+
 /* ============ WELCOME POPUP ============ */
 
 .welcome-popup {

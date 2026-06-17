@@ -682,6 +682,24 @@ async function renderAdmin() {
 
             <!-- TAB CONTENT: Quản lý phòng -->
             <div class="admin-tab-content active" id="content-manage">
+                <!-- Filter Bar -->
+                <div class="admin-manage-filters" id="admin-manage-filters">
+                    <div class="admin-filter-group">
+                        <span class="admin-filter-label">Loại phòng:</span>
+                        <button class="admin-filter-btn active" data-filter-type="all">Tất cả</button>
+                        <button class="admin-filter-btn" data-filter-type="phong-tro">Phòng trọ</button>
+                        <button class="admin-filter-btn" data-filter-type="studio">Studio</button>
+                        <button class="admin-filter-btn" data-filter-type="nha-nguyen-can">Nhà nguyên căn</button>
+                    </div>
+                    <div class="admin-filter-group">
+                        <span class="admin-filter-label">Khu vực:</span>
+                        <button class="admin-filter-btn active" data-filter-area="all">Tất cả</button>
+                        <button class="admin-filter-btn" data-filter-area="Vin 1">Vin 1</button>
+                        <button class="admin-filter-btn" data-filter-area="Vin 2">Vin 2</button>
+                        <button class="admin-filter-btn" data-filter-area="Vin 3">Vin 3</button>
+                    </div>
+                </div>
+
                 <!-- Active Rooms -->
                 <div class="admin-section-label">
                     <span class="material-symbols-rounded" style="color: var(--success);">check_circle</span>
@@ -805,6 +823,45 @@ async function renderAdmin() {
         openRoomForm(null);
     });
 
+    // ---- MANAGE TAB: Filter by type & area ----
+    let adminFilterType = 'all';
+    let adminFilterArea = 'all';
+
+    function applyManageFilters() {
+        const items = document.querySelectorAll('#content-manage .admin-room-item');
+        let visibleActive = 0, visibleExpired = 0;
+        items.forEach(item => {
+            const type = item.dataset.roomType || '';
+            const area = item.dataset.roomArea || '';
+            const typeMatch = adminFilterType === 'all' || type === adminFilterType;
+            const areaMatch = adminFilterArea === 'all' || area === adminFilterArea;
+            const show = typeMatch && areaMatch;
+            item.style.display = show ? '' : 'none';
+            if (show) {
+                if (item.classList.contains('admin-room-expired')) visibleExpired++;
+                else visibleActive++;
+            }
+        });
+    }
+
+    document.querySelectorAll('[data-filter-type]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('[data-filter-type]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            adminFilterType = btn.dataset.filterType;
+            applyManageFilters();
+        });
+    });
+
+    document.querySelectorAll('[data-filter-area]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('[data-filter-area]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            adminFilterArea = btn.dataset.filterArea;
+            applyManageFilters();
+        });
+    });
+
     // ---- MANAGE TAB: Bind edit/delete ----
     document.querySelectorAll('#content-manage .btn-edit-room').forEach(btn => {
         btn.addEventListener('click', async (e) => {
@@ -907,7 +964,7 @@ async function renderAdmin() {
 function renderAdminRoomItem(room, expired = false) {
     const thumb = room.images && room.images.length > 0 ? room.images[0] : null;
     return `
-        <div class="admin-room-item ${expired ? 'admin-room-expired' : ''}" id="admin-item-${room.id}" data-address="${room.address || ''}">
+        <div class="admin-room-item ${expired ? 'admin-room-expired' : ''}" id="admin-item-${room.id}" data-address="${room.address || ''}" data-room-type="${room.roomType || 'studio'}" data-room-area="${room.area || ''}">
             <div class="admin-room-thumb">
                 ${thumb
                     ? `<img src="${thumb}" alt="${room.title}">`
