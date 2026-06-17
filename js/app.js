@@ -1047,10 +1047,10 @@ async function loadAnalyticsDashboard() {
             return roomMap[String(id)] || `Phòng #${String(id).substring(0, 6)}`;
         }
 
-        // Compute stats for a given period
-        function computeStats(since) {
-            const views = raw.allPageViews.filter(v => !since || v.created_at >= since);
-            const clicks = raw.allClicks.filter(c => !since || c.created_at >= since);
+        // Compute stats for a given period (sinceMs = epoch milliseconds)
+        function computeStats(sinceMs) {
+            const views = raw.allPageViews.filter(v => !sinceMs || new Date(v.created_at).getTime() >= sinceMs);
+            const clicks = raw.allClicks.filter(c => !sinceMs || new Date(c.created_at).getTime() >= sinceMs);
             const zalo = clicks.filter(c => c.event_type === 'zalo_click').length;
             const phone = clicks.filter(c => c.event_type === 'phone_click').length;
             const roomClicks = clicks.filter(c => c.event_type === 'room_view' && c.room_id);
@@ -1061,16 +1061,16 @@ async function loadAnalyticsDashboard() {
         }
 
         const now = new Date();
-        // Use LOCAL midnight (Vietnam timezone), not UTC
+        // Local midnight Vietnam (UTC+7): 00:01 → 23:59
         const localMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const todaySince = localMidnight.toISOString();
-        const weekSince = new Date(localMidnight.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
-        const monthSince = new Date(localMidnight.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+        const todayMs = localMidnight.getTime();
+        const weekMs = todayMs - 7 * 24 * 60 * 60 * 1000;
+        const monthMs = todayMs - 30 * 24 * 60 * 60 * 1000;
 
         const periods = {
-            today: { label: 'Hôm nay', since: todaySince },
-            week:  { label: '7 ngày qua', since: weekSince },
-            month: { label: '30 ngày qua', since: monthSince },
+            today: { label: 'Hôm nay', since: todayMs },
+            week:  { label: '7 ngày qua', since: weekMs },
+            month: { label: '30 ngày qua', since: monthMs },
         };
 
         function renderTopRooms(list) {
