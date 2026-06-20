@@ -285,30 +285,31 @@ function applyFilters() {
     let visibleCount = 0;
 
     // Show/hide cards based on filters
-    // Normalize search query: strip diacritics + numbers for matching
+    // Normalize search query: strip diacritics for accent-insensitive matching
     const searchNorm = currentSearchQuery
         .toLowerCase()
         .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-        .replace(/đ/g, 'd')
-        .replace(/[0-9]+/g, '')
+        .replace(/đ/g, 'd').replace(/Đ/g, 'D')
         .trim();
 
     cards.forEach(card => {
         const area = card.dataset.area;
         const type = card.dataset.type;
         const address = card.dataset.address || '';
+        const title = card.dataset.title || '';
         const matchArea = currentFilter === 'all' || area === currentFilter;
         const matchType = currentTypeFilter === 'all' || type === currentTypeFilter;
 
-        // Match search: normalize address, strip numbers, compare
+        // Match search: normalize address + title, compare
         let matchSearch = true;
         if (searchNorm) {
-            const addrNorm = address
+            const normalize = (s) => s.toLowerCase()
                 .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-                .replace(/đ/g, 'd')
-                .replace(/[0-9]+/g, '')
+                .replace(/đ/g, 'd').replace(/Đ/g, 'D')
                 .trim();
-            matchSearch = addrNorm.includes(searchNorm);
+            const addrNorm = normalize(address);
+            const titleNorm = normalize(title);
+            matchSearch = addrNorm.includes(searchNorm) || titleNorm.includes(searchNorm);
         }
 
         const visible = matchArea && matchType && matchSearch;
@@ -395,7 +396,7 @@ function renderRoomCard(room, index) {
         : null;
 
     return `
-        <div class="room-card animate-card" data-room-id="${room.id}" data-area="${room.area}" data-type="${room.roomType || 'studio'}" data-price="${room.price}" data-address="${(room.address || '').toLowerCase()}" style="animation-delay: ${index * 0.08}s" id="room-card-${room.id}">
+        <div class="room-card animate-card" data-room-id="${room.id}" data-area="${room.area}" data-type="${room.roomType || 'studio'}" data-price="${room.price}" data-address="${(room.address || '').toLowerCase()}" data-title="${(room.title || '').toLowerCase()}" style="animation-delay: ${index * 0.08}s" id="room-card-${room.id}">
             <div class="room-card-image watermark">
                 ${thumbnail
                     ? `<img src="${thumbnail}" alt="${room.title}" loading="lazy">`
