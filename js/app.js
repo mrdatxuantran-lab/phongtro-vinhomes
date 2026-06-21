@@ -1000,9 +1000,7 @@ async function renderAdmin() {
         if (!confirm(`Bạn có chắc muốn xóa ${ids.length} phòng đã chọn?`)) return;
         bulkDeleteBtn.disabled = true;
         bulkDeleteBtn.innerHTML = '<span class="material-symbols-rounded" style="font-size:16px">hourglass_top</span> Đang xóa...';
-        for (const id of ids) {
-            await deleteRoom(parseInt(id));
-        }
+        await Promise.all(ids.map(id => deleteRoom(parseInt(id))));
         showToast(`Đã xóa ${ids.length} phòng thành công!`, 'success');
         renderAdmin();
     });
