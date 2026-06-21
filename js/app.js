@@ -306,22 +306,10 @@ function applyFilters() {
         const type = card.dataset.type;
         const address = card.dataset.address || '';
         const title = card.dataset.title || '';
+        const config = card.dataset.config || '';
         const matchArea = currentFilter === 'all' || area === currentFilter;
         const matchType = currentTypeFilter === 'all' || type === currentTypeFilter;
-
-        // Config filter: match title text (1n, 2n1wc, 3n2wc)
-        // Normalize: remove spaces, lowercase → "1 N+" → "1n+", "2N 1WC" → "2n1wc"
-        let matchConfig = true;
-        if (currentConfigFilter !== 'all') {
-            const titleClean = title.replace(/\s+/g, '').toLowerCase();
-            if (currentConfigFilter === '1n') {
-                matchConfig = /1n\+?/.test(titleClean) && !/[23]n/.test(titleClean);
-            } else if (currentConfigFilter === '2n1wc') {
-                matchConfig = /2n1wc/.test(titleClean);
-            } else if (currentConfigFilter === '3n2wc') {
-                matchConfig = /3n2wc/.test(titleClean);
-            }
-        }
+        const matchConfig = currentConfigFilter === 'all' || config === currentConfigFilter;
 
         // Match search: normalize address + title, compare
         let matchSearch = true;
@@ -1311,14 +1299,38 @@ function openRoomForm(room) {
                     </div>
                 </div>
 
-                <div class="form-group" id="form-config-group">
-                    <label class="form-label">Cấu hình phòng (Vin 1)</label>
-                    <select class="form-select" id="form-config">
-                        <option value="" ${!isEdit || !room.roomConfig ? 'selected' : ''}>Không chọn</option>
-                        <option value="1n" ${isEdit && room.roomConfig === '1n' ? 'selected' : ''}>Phòng 1N+</option>
-                        <option value="2n1wc" ${isEdit && room.roomConfig === '2n1wc' ? 'selected' : ''}>Phòng 2N1WC</option>
-                        <option value="3n2wc" ${isEdit && room.roomConfig === '3n2wc' ? 'selected' : ''}>Phòng 3N2WC</option>
-                    </select>
+                <div class="form-group" id="form-config-group" style="display:none;">
+                    <label class="form-label">Cấu hình phòng</label>
+                    <div class="room-type-selector" id="config-selector">
+                        <label class="room-type-option">
+                            <input type="radio" name="roomConfig" value="" ${!isEdit || !room.roomConfig ? 'checked' : ''}>
+                            <span class="room-type-label">
+                                <span class="material-symbols-rounded">block</span>
+                                Không chọn
+                            </span>
+                        </label>
+                        <label class="room-type-option">
+                            <input type="radio" name="roomConfig" value="1n" ${isEdit && room.roomConfig === '1n' ? 'checked' : ''}>
+                            <span class="room-type-label">
+                                <span class="material-symbols-rounded">bed</span>
+                                Phòng 1N+
+                            </span>
+                        </label>
+                        <label class="room-type-option">
+                            <input type="radio" name="roomConfig" value="2n1wc" ${isEdit && room.roomConfig === '2n1wc' ? 'checked' : ''}>
+                            <span class="room-type-label">
+                                <span class="material-symbols-rounded">meeting_room</span>
+                                Phòng 2N1WC
+                            </span>
+                        </label>
+                        <label class="room-type-option">
+                            <input type="radio" name="roomConfig" value="3n2wc" ${isEdit && room.roomConfig === '3n2wc' ? 'checked' : ''}>
+                            <span class="room-type-label">
+                                <span class="material-symbols-rounded">holiday_village</span>
+                                Phòng 3N2WC
+                            </span>
+                        </label>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -1503,6 +1515,16 @@ function bindModalEvents(editId) {
         runAutoDetect(e.target.value);
     });
 
+    // Show/hide config group based on area
+    const configGroup = document.getElementById('form-config-group');
+    function toggleConfigGroup() {
+        if (configGroup) {
+            configGroup.style.display = areaSelect?.value === 'Vin 1' ? '' : 'none';
+        }
+    }
+    areaSelect?.addEventListener('change', toggleConfigGroup);
+    toggleConfigGroup(); // Initial state
+
     // Run detection on load if editing
     if (editId && addressInput?.value) {
         runAutoDetect(addressInput.value);
@@ -1673,7 +1695,7 @@ async function saveRoomForm(editId, closeCallback) {
     const address = document.getElementById('form-address')?.value.trim();
     const description = document.getElementById('form-description')?.value.trim();
     const adminNote = document.getElementById('form-admin-note')?.value.trim();
-    const roomConfig = document.getElementById('form-config')?.value || null;
+    const roomConfig = document.querySelector('input[name="roomConfig"]:checked')?.value || null;
 
     // Validation
     if (!price || price <= 0) { showToast('Vui lòng nhập giá thuê hợp lệ', 'error'); return; }
