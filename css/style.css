@@ -2178,7 +2178,7 @@ h3 { font-size: 1.25rem; }
 }
 
 .animate-card {
-    animation: fadeInUp 0.5s ease-out both;
+    animation: fadeInUp 0.3s ease-out both;
 }
 
 /* ============================================

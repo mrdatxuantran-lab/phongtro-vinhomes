@@ -172,6 +172,23 @@ function getRoomTypeName(type) {
 let currentPriceSort = 'default'; // 'default' | 'asc' | 'desc'
 let currentSearchQuery = ''; // search by address name
 
+// Room data cache
+let _roomsCache = null;
+let _roomsCacheTime = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+async function getCachedRooms(forceRefresh = false) {
+    const now = Date.now();
+    if (!forceRefresh && _roomsCache && (now - _roomsCacheTime) < CACHE_TTL) {
+        return _roomsCache;
+    }
+    _roomsCache = await getRooms();
+    _roomsCacheTime = now;
+    return _roomsCache;
+}
+
+function invalidateCache() { _roomsCache = null; _roomsCacheTime = 0; }
+
 async function renderHome() {
     const app = document.getElementById('app');
 
@@ -187,7 +204,7 @@ async function renderHome() {
 
     let rooms = [];
     try {
-        rooms = await getRooms();
+        rooms = await getCachedRooms();
     } catch (err) {
         console.error('Failed to load rooms:', err);
     }
@@ -427,10 +444,10 @@ function renderRoomCard(room, index) {
         : null;
 
     return `
-        <div class="room-card animate-card" data-room-id="${room.id}" data-area="${room.area}" data-type="${room.roomType || 'studio'}" data-config="${room.roomConfig || ''}" data-price="${room.price}" data-address="${(room.address || '').toLowerCase()}" data-title="${(room.title || '').toLowerCase()}" style="animation-delay: ${index * 0.08}s" id="room-card-${room.id}">
+        <div class="room-card animate-card" data-room-id="${room.id}" data-area="${room.area}" data-type="${room.roomType || 'studio'}" data-config="${room.roomConfig || ''}" data-price="${room.price}" data-address="${(room.address || '').toLowerCase()}" data-title="${(room.title || '').toLowerCase()}" style="animation-delay: ${Math.min(index * 0.03, 0.5)}s" id="room-card-${room.id}">
             <div class="room-card-image watermark">
                 ${thumbnail
-                    ? `<img src="${thumbnail}" alt="${room.title}" loading="lazy">`
+                    ? `<img src="${thumbnail}" alt="${room.title}" loading="lazy" decoding="async">`
                     : `<div class="no-image-placeholder">
                         <span class="material-symbols-rounded">image</span>
                         <span>Chưa có ảnh</span>
@@ -669,10 +686,11 @@ async function renderAdmin() {
     const app = document.getElementById('app');
     app.innerHTML = '<div class="loading-spinner"><span class="material-symbols-rounded spinning">progress_activity</span><p>Đang tải quản trị...</p></div>';
 
+    invalidateCache(); // Force fresh data in admin
     let rooms = [];
     let contact = { phone: '0965278868', zaloLink: 'https://zalo.me/84965278868' };
     try {
-        rooms = await getRooms();
+        rooms = await getCachedRooms(true);
         contact = await getContactInfo();
     } catch (err) {
         console.error('Failed to load admin data:', err);
@@ -1086,7 +1104,7 @@ function renderAdminRoomItem(room, expired = false) {
             </label>
             <div class="admin-room-thumb">
                 ${thumb
-                    ? `<img src="${thumb}" alt="${room.title}">`
+                    ? `<img src="${thumb}" alt="${room.title}" loading="lazy" decoding="async">`
                     : `<div class="no-image-placeholder" style="font-size: 0.6rem;"><span class="material-symbols-rounded" style="font-size: 24px;">image</span></div>`
                 }
             </div>
