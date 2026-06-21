@@ -235,31 +235,30 @@ async function renderHome() {
                     </button>
                 </div>
 
-                <div class="search-config-row">
-                    <div class="search-address-wrapper" id="search-address-wrapper">
-                        <span class="material-symbols-rounded search-address-icon">search</span>
-                        <input type="text" class="search-address-input" id="search-address-input" placeholder="Tìm khu vực: VD Thời Đại, San Hô..." autocomplete="off">
-                        <button class="search-clear-btn hidden" id="search-clear-btn">
-                            <span class="material-symbols-rounded" style="font-size:18px">close</span>
-                        </button>
-                    </div>
-
-                    <div class="config-filter-inline" id="config-filter-section" style="display:none;">
-                        <button class="config-btn active" data-config="all">Tất cả</button>
-                        <button class="config-btn" data-config="1n">1N+</button>
-                        <button class="config-btn" data-config="2n1wc">2N1WC</button>
-                        <button class="config-btn" data-config="3n2wc">3N2WC</button>
-                    </div>
-
-                    <div class="price-sort-wrapper" id="price-sort-wrapper">
-                        <span class="material-symbols-rounded price-sort-icon">sort</span>
-                        <select class="price-sort-select" id="price-sort-select">
-                            <option value="default">Sắp xếp giá</option>
-                            <option value="asc">Giá thấp → cao</option>
-                            <option value="desc">Giá cao → thấp</option>
-                        </select>
-                    </div>
+                <div class="search-address-wrapper" id="search-address-wrapper">
+                    <span class="material-symbols-rounded search-address-icon">search</span>
+                    <input type="text" class="search-address-input" id="search-address-input" placeholder="Tìm khu vực: VD Thời Đại, San Hô..." autocomplete="off">
+                    <button class="search-clear-btn hidden" id="search-clear-btn">
+                        <span class="material-symbols-rounded" style="font-size:18px">close</span>
+                    </button>
                 </div>
+
+                <div class="config-filter-inline" id="config-filter-section" style="display:none;">
+                    <button class="config-btn active" data-config="all">Tất cả</button>
+                    <button class="config-btn" data-config="1n">1N+</button>
+                    <button class="config-btn" data-config="2n1wc">2N1WC</button>
+                    <button class="config-btn" data-config="3n2wc">3N2WC</button>
+                </div>
+
+                <div class="price-sort-wrapper" id="price-sort-wrapper">
+                    <span class="material-symbols-rounded price-sort-icon">sort</span>
+                    <select class="price-sort-select" id="price-sort-select">
+                        <option value="default">Sắp xếp giá</option>
+                        <option value="asc">Giá thấp → cao</option>
+                        <option value="desc">Giá cao → thấp</option>
+                    </select>
+                </div>
+            </div>
 
             <div class="rooms-grid" id="rooms-grid">
                 ${activeRooms.map((room, index) => renderRoomCard(room, index)).join('')}

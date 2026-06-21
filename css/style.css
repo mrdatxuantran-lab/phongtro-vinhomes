@@ -1430,20 +1430,12 @@ h3 { font-size: 1.25rem; }
     gap: 4px;
 }
 
-/* Sub-filter (Vin 1 config) - inline with search */
-.search-config-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-    width: 100%;
-    justify-content: center;
-}
-
+/* Sub-filter (Vin 1 config) - inline with search row */
 .config-filter-inline {
     display: flex;
     gap: 6px;
-    animation: slideDown 0.3s ease;
+    align-items: center;
+    animation: slideDown 0.25s ease;
 }
 
 @keyframes slideDown {
