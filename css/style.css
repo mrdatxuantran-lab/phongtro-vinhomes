@@ -1349,6 +1349,64 @@ h3 { font-size: 1.25rem; }
     border-color: var(--glass-border-hover);
 }
 
+/* Bulk action bar */
+.bulk-action-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 16px;
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border: 1.5px solid #f59e0b;
+    border-radius: var(--radius-sm);
+    margin-bottom: 12px;
+    animation: slideDown 0.25s ease;
+}
+
+.bulk-select-all {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #92400e;
+}
+
+.bulk-select-all input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+.bulk-selected-count {
+    font-size: 0.82rem;
+    color: #92400e;
+    font-weight: 500;
+    flex: 1;
+}
+
+.btn-bulk-delete {
+    padding: 6px 14px !important;
+    font-size: 0.82rem !important;
+    gap: 4px;
+}
+
+/* Room checkbox */
+.room-checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.room-checkbox-wrapper input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    border-radius: 4px;
+}
+
 .admin-room-thumb {
     width: 80px;
     height: 60px;

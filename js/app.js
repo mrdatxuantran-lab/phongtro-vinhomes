@@ -744,6 +744,17 @@ async function renderAdmin() {
                     Phòng đang hoạt động
                     <span class="admin-count-badge" id="admin-active-count">${activeRooms.length}</span>
                 </div>
+                <div class="bulk-action-bar" id="bulk-action-bar" style="display:none;">
+                    <label class="bulk-select-all">
+                        <input type="checkbox" id="select-all-rooms">
+                        <span>Chọn tất cả</span>
+                    </label>
+                    <span class="bulk-selected-count" id="bulk-selected-count">0 phòng đã chọn</span>
+                    <button class="btn-danger btn-bulk-delete" id="btn-bulk-delete" disabled>
+                        <span class="material-symbols-rounded" style="font-size:16px">delete_sweep</span>
+                        Xóa đã chọn
+                    </button>
+                </div>
                 <div class="admin-room-list" id="admin-active-list" ${activeRooms.length === 0 ? 'style="display:none"' : ''}>
                     ${activeRooms.map(room => renderAdminRoomItem(room, false)).join('')}
                 </div>
@@ -951,6 +962,49 @@ async function renderAdmin() {
         renderAdmin();
     });
 
+    // ---- BULK SELECT/DELETE ----
+    const bulkBar = document.getElementById('bulk-action-bar');
+    const selectAllCb = document.getElementById('select-all-rooms');
+    const bulkCountEl = document.getElementById('bulk-selected-count');
+    const bulkDeleteBtn = document.getElementById('btn-bulk-delete');
+
+    function updateBulkUI() {
+        const checked = document.querySelectorAll('#admin-active-list .room-select-cb:checked');
+        const total = document.querySelectorAll('#admin-active-list .room-select-cb');
+        const count = checked.length;
+        if (bulkBar) bulkBar.style.display = count > 0 ? '' : 'none';
+        if (bulkCountEl) bulkCountEl.textContent = `${count} phòng đã chọn`;
+        if (bulkDeleteBtn) bulkDeleteBtn.disabled = count === 0;
+        if (selectAllCb) selectAllCb.checked = total.length > 0 && checked.length === total.length;
+    }
+
+    // Individual checkbox
+    document.querySelectorAll('#admin-active-list .room-select-cb').forEach(cb => {
+        cb.addEventListener('change', updateBulkUI);
+    });
+
+    // Select all
+    selectAllCb?.addEventListener('change', () => {
+        const visible = document.querySelectorAll('#admin-active-list .admin-room-item:not([style*="display: none"]):not([style*="display:none"]) .room-select-cb');
+        visible.forEach(cb => { cb.checked = selectAllCb.checked; });
+        updateBulkUI();
+    });
+
+    // Bulk delete
+    bulkDeleteBtn?.addEventListener('click', async () => {
+        const checked = document.querySelectorAll('#admin-active-list .room-select-cb:checked');
+        const ids = Array.from(checked).map(cb => cb.dataset.roomId);
+        if (ids.length === 0) return;
+        if (!confirm(`Bạn có chắc muốn xóa ${ids.length} phòng đã chọn?`)) return;
+        bulkDeleteBtn.disabled = true;
+        bulkDeleteBtn.innerHTML = '<span class="material-symbols-rounded" style="font-size:16px">hourglass_top</span> Đang xóa...';
+        for (const id of ids) {
+            await deleteRoom(parseInt(id));
+        }
+        showToast(`Đã xóa ${ids.length} phòng thành công!`, 'success');
+        renderAdmin();
+    });
+
     // ---- SEARCH TAB: Bind search ----
     const searchInput = document.getElementById('admin-search-input');
     const searchClear = document.getElementById('admin-search-clear');
@@ -1027,6 +1081,9 @@ function renderAdminRoomItem(room, expired = false) {
     const thumb = room.images && room.images.length > 0 ? room.images[0] : null;
     return `
         <div class="admin-room-item ${expired ? 'admin-room-expired' : ''}" id="admin-item-${room.id}" data-address="${room.address || ''}" data-room-type="${room.roomType || 'studio'}" data-room-area="${room.area || ''}">
+            <label class="room-checkbox-wrapper" onclick="event.stopPropagation()">
+                <input type="checkbox" class="room-select-cb" data-room-id="${room.id}">
+            </label>
             <div class="admin-room-thumb">
                 ${thumb
                     ? `<img src="${thumb}" alt="${room.title}">`
