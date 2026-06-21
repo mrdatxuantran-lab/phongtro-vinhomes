@@ -163,7 +163,7 @@ let currentConfigFilter = 'all'; // 'all' | '1n' | '2n1wc' | '3n2wc'
 
 function getRoomTypeName(type) {
     switch(type) {
-        case 'phongtro': return 'Phòng trọ';
+        case 'phongtro': return 'Phòng';
         case 'nhanguyencan': return 'Nhà nguyên căn';
         case 'dulich': return 'Phòng du lịch';
         default: return 'Studio';
@@ -183,7 +183,7 @@ async function renderHome() {
     currentPriceSort = 'default';
 
     // Show loading
-    app.innerHTML = '<div class="loading-spinner"><span class="material-symbols-rounded spinning">progress_activity</span><p>Đang tải phòng trọ...</p></div>';
+    app.innerHTML = '<div class="loading-spinner"><span class="material-symbols-rounded spinning">progress_activity</span><p>Đang tải phòng...</p></div>';
 
     let rooms = [];
     try {
@@ -197,7 +197,7 @@ async function renderHome() {
         <div class="container">
             <div class="page-header">
                 <h1 class="gradient-text">Tìm Phòng Phù Hợp</h1>
-                <p>Tìm nhanh phòng trọ, studio, căn hộ và phòng du lịch phù hợp ngân sách. Cập nhật liên tục tình trạng phòng trống và thời gian có thể vào ở.</p>
+                <p>Tìm nhanh phòng, studio, căn hộ và phòng du lịch phù hợp ngân sách. Cập nhật liên tục tình trạng phòng trống và thời gian có thể vào ở.</p>
             </div>
 
             <div class="filter-bar">
@@ -223,7 +223,7 @@ async function renderHome() {
                     </button>
                     <button class="filter-btn filter-btn-type" data-type="phongtro">
                         <span class="material-symbols-rounded" style="font-size:16px">house</span>
-                        <span>Phòng trọ</span>
+                        <span>Phòng</span>
                     </button>
                     <button class="filter-btn filter-btn-type" data-type="nhanguyencan">
                         <span class="material-symbols-rounded" style="font-size:16px">home</span>
@@ -472,7 +472,7 @@ async function renderDetail(id) {
             <div class="container">
                 <div class="empty-state">
                     <span class="material-symbols-rounded">error</span>
-                    <p>Không tìm thấy phòng trọ này</p>
+                    <p>Không tìm thấy phòng này</p>
                     <a href="#/" style="color: var(--accent-light); margin-top: 12px; display: inline-block;">← Quay lại trang chủ</a>
                 </div>
             </div>
@@ -518,7 +518,7 @@ async function renderDetail(id) {
             <div class="video-section">
                 <h2>
                     <span class="material-symbols-rounded">videocam</span>
-                    Video phòng trọ
+                    Video phòng
                 </h2>
                 <div class="video-wrapper watermark watermark-lg">
                     <video controls preload="metadata" id="room-video">
@@ -688,7 +688,7 @@ async function renderAdmin() {
             <div class="admin-header">
                 <h1>
                     <span class="material-symbols-rounded">admin_panel_settings</span>
-                    <span class="gradient-text">Quản trị phòng trọ</span>
+                    <span class="gradient-text">Quản trị phòng</span>
                 </h1>
             </div>
 
@@ -724,7 +724,7 @@ async function renderAdmin() {
                     <div class="admin-filter-group">
                         <span class="admin-filter-label">Loại phòng:</span>
                         <button class="admin-filter-btn active" data-filter-type="all">Tất cả</button>
-                        <button class="admin-filter-btn" data-filter-type="phongtro">Phòng trọ</button>
+                        <button class="admin-filter-btn" data-filter-type="phongtro">Phòng</button>
                         <button class="admin-filter-btn" data-filter-type="studio">Studio</button>
                         <button class="admin-filter-btn" data-filter-type="nhanguyencan">Nhà nguyên căn</button>
                         <button class="admin-filter-btn" data-filter-type="dulich">Du lịch</button>
@@ -797,7 +797,7 @@ async function renderAdmin() {
                 <div id="search-results">
                     <div class="empty-state" style="padding: 40px 20px;" id="search-placeholder">
                         <span class="material-symbols-rounded">manage_search</span>
-                        <p>Nhập từ khóa để tìm kiếm phòng trọ</p>
+                        <p>Nhập từ khóa để tìm kiếm phòng</p>
                     </div>
                     <div class="admin-room-list hidden" id="search-results-list">
                         ${rooms.map(room => renderAdminRoomItem(room, isExpired(room))).join('')}
@@ -1278,7 +1278,7 @@ function openRoomForm(room) {
         <div class="modal-header">
             <h2>
                 <span class="material-symbols-rounded">${isEdit ? 'edit' : 'add_home'}</span>
-                ${isEdit ? 'Chỉnh sửa phòng trọ' : 'Thêm phòng trọ mới'}
+                ${isEdit ? 'Chỉnh sửa phòng' : 'Thêm phòng mới'}
             </h2>
             <button class="modal-close" id="modal-close-btn">
                 <span class="material-symbols-rounded">close</span>
@@ -1292,7 +1292,7 @@ function openRoomForm(room) {
                         <label class="type-radio-card ${isEdit && room.roomType === 'phongtro' ? 'selected' : ''}" id="radio-phongtro">
                             <input type="radio" name="form-room-type" value="phongtro" ${isEdit && room.roomType === 'phongtro' ? 'checked' : ''}>
                             <span class="material-symbols-rounded">house</span>
-                            <span>Phòng trọ</span>
+                            <span>Phòng</span>
                         </label>
                         <label class="type-radio-card ${isEdit && room.roomType === 'studio' ? 'selected' : ''}" id="radio-studio">
                             <input type="radio" name="form-room-type" value="studio" ${isEdit && room.roomType === 'studio' ? 'checked' : ''}>
@@ -1392,7 +1392,7 @@ function openRoomForm(room) {
 
                 <div class="form-group">
                     <label class="form-label">Mô tả</label>
-                    <textarea class="form-textarea" id="form-description" placeholder="Mô tả chi tiết về phòng trọ..." rows="5">${isEdit ? room.description : ''}</textarea>
+                    <textarea class="form-textarea" id="form-description" placeholder="Mô tả chi tiết về phòng..." rows="5">${isEdit ? room.description : ''}</textarea>
                 </div>
 
                 <div class="form-group">
@@ -1405,7 +1405,7 @@ function openRoomForm(room) {
 
                 <!-- Image Upload -->
                 <div class="form-group">
-                    <label class="form-label">Ảnh phòng trọ</label>
+                    <label class="form-label">Ảnh phòng</label>
                     <div class="upload-area" id="upload-images-area">
                         <span class="material-symbols-rounded">add_photo_alternate</span>
                         <p>Kéo thả ảnh vào đây hoặc <strong>click để chọn</strong></p>
@@ -1424,7 +1424,7 @@ function openRoomForm(room) {
 
                 <!-- Video Upload -->
                 <div class="form-group">
-                    <label class="form-label">Video phòng trọ</label>
+                    <label class="form-label">Video phòng</label>
                     <div class="upload-area" id="upload-video-area">
                         <span class="material-symbols-rounded">video_call</span>
                         <p>Kéo thả video vào đây hoặc <strong>click để chọn</strong></p>
@@ -1785,19 +1785,19 @@ async function saveRoomForm(editId, closeCallback) {
     try {
         if (editId !== null) {
             await updateRoom(editId, roomData);
-            showToast('Đã cập nhật phòng trọ thành công!', 'success');
+            showToast('Đã cập nhật phòng thành công!', 'success');
         } else {
             await addRoom(roomData);
-            showToast('Đã thêm phòng trọ mới thành công!', 'success');
+            showToast('Đã thêm phòng mới thành công!', 'success');
         }
         closeCallback();
         renderAdmin();
     } catch (err) {
         console.error('Save error:', err);
-        showToast('Lỗi khi lưu phòng trọ. Vui lòng thử lại.', 'error');
+        showToast('Lỗi khi lưu phòng. Vui lòng thử lại.', 'error');
         if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.innerHTML = '<span class="material-symbols-rounded">save</span> Lưu phòng trọ';
+            submitBtn.innerHTML = '<span class="material-symbols-rounded">save</span> Lưu phòng';
         }
     }
 }
@@ -1812,7 +1812,7 @@ function openDeleteConfirm(room) {
         <div class="modal-body">
             <div class="confirm-dialog">
                 <span class="material-symbols-rounded">warning</span>
-                <h3>Xác nhận xóa phòng trọ</h3>
+                <h3>Xác nhận xóa phòng</h3>
                 <p>Bạn có chắc chắn muốn xóa "<strong>${room.title}</strong>"?<br>Hành động này không thể hoàn tác.</p>
                 <div class="btn-group">
                     <button class="btn-cancel" id="confirm-cancel">Hủy bỏ</button>
@@ -1837,7 +1837,7 @@ function openDeleteConfirm(room) {
     document.getElementById('confirm-delete')?.addEventListener('click', async () => {
         await deleteRoom(room.id);
         closeModal();
-        showToast('Đã xóa phòng trọ thành công!', 'success');
+        showToast('Đã xóa phòng thành công!', 'success');
         renderAdmin();
     });
 
