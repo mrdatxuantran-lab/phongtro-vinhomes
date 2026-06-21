@@ -1754,7 +1754,8 @@ async function saveRoomForm(editId, closeCallback) {
     const address = document.getElementById('form-address')?.value.trim();
     const description = document.getElementById('form-description')?.value.trim();
     const adminNote = document.getElementById('form-admin-note')?.value.trim();
-    const roomConfig = document.querySelector('input[name="roomConfig"]:checked')?.value || null;
+    const configVal = document.querySelector('input[name="roomConfig"]:checked')?.value;
+    const roomConfig = configVal && configVal.trim() !== '' ? configVal : null;
 
     // Validation
     if (!price || price <= 0) { showToast('Vui lòng nhập giá thuê hợp lệ', 'error'); return; }
@@ -1794,7 +1795,8 @@ async function saveRoomForm(editId, closeCallback) {
         renderAdmin();
     } catch (err) {
         console.error('Save error:', err);
-        showToast('Lỗi khi lưu phòng. Vui lòng thử lại.', 'error');
+        const msg = err?.message || err?.details || 'Không rõ lỗi';
+        showToast(`Lỗi khi lưu phòng: ${msg}`, 'error');
         if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<span class="material-symbols-rounded">save</span> Lưu phòng';
