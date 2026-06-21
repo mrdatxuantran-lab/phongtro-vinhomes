@@ -175,7 +175,7 @@ let currentSearchQuery = ''; // search by address name
 // Room data cache
 let _roomsCache = null;
 let _roomsCacheTime = 0;
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL = 30 * 1000; // 30 seconds
 
 async function getCachedRooms(forceRefresh = false) {
     const now = Date.now();
