@@ -159,6 +159,7 @@ function renderAdminLogin() {
 
 let currentFilter = 'all';
 let currentTypeFilter = 'all'; // 'all' | 'studio' | 'phongtro' | 'nhanguyencan' | 'dulich'
+let currentConfigFilter = 'all'; // 'all' | '1n' | '2n1wc' | '3n2wc'
 
 function getRoomTypeName(type) {
     switch(type) {
@@ -177,6 +178,7 @@ async function renderHome() {
     // Reset all filters when returning to home
     currentFilter = 'all';
     currentTypeFilter = 'all';
+    currentConfigFilter = 'all';
     currentSearchQuery = '';
     currentPriceSort = 'default';
 
@@ -211,6 +213,24 @@ async function renderHome() {
                     </button>
                     <button class="filter-btn" data-filter="Vin 3">
                         <span>Vin 3</span>
+                    </button>
+                </div>
+
+                <div class="filter-sub-section" id="config-filter-section" style="display:none;">
+                    <button class="filter-btn filter-sub-btn active" data-config="all">
+                        <span>Tất cả</span>
+                    </button>
+                    <button class="filter-btn filter-sub-btn" data-config="1n">
+                        <span class="material-symbols-rounded" style="font-size:16px">bed</span>
+                        <span>Phòng 1N+</span>
+                    </button>
+                    <button class="filter-btn filter-sub-btn" data-config="2n1wc">
+                        <span class="material-symbols-rounded" style="font-size:16px">meeting_room</span>
+                        <span>Phòng 2N1WC</span>
+                    </button>
+                    <button class="filter-btn filter-sub-btn" data-config="3n2wc">
+                        <span class="material-symbols-rounded" style="font-size:16px">holiday_village</span>
+                        <span>Phòng 3N2WC</span>
                     </button>
                 </div>
 
@@ -295,10 +315,12 @@ function applyFilters() {
     cards.forEach(card => {
         const area = card.dataset.area;
         const type = card.dataset.type;
+        const config = card.dataset.config || '';
         const address = card.dataset.address || '';
         const title = card.dataset.title || '';
         const matchArea = currentFilter === 'all' || area === currentFilter;
         const matchType = currentTypeFilter === 'all' || type === currentTypeFilter;
+        const matchConfig = currentConfigFilter === 'all' || config === currentConfigFilter;
 
         // Match search: normalize address + title, compare
         let matchSearch = true;
@@ -312,7 +334,7 @@ function applyFilters() {
             matchSearch = addrNorm.includes(searchNorm) || titleNorm.includes(searchNorm);
         }
 
-        const visible = matchArea && matchType && matchSearch;
+        const visible = matchArea && matchType && matchConfig && matchSearch;
         card.style.display = visible ? '' : 'none';
         if (visible) visibleCount++;
     });
@@ -347,6 +369,26 @@ function bindHomeEvents() {
     document.querySelectorAll('.filter-btn[data-filter]').forEach(btn => {
         btn.addEventListener('click', () => {
             currentFilter = btn.dataset.filter;
+            // Show/hide Vin 1 sub-filter
+            const configSection = document.getElementById('config-filter-section');
+            if (configSection) {
+                configSection.style.display = currentFilter === 'Vin 1' ? '' : 'none';
+            }
+            // Reset config filter when switching area
+            currentConfigFilter = 'all';
+            document.querySelectorAll('.filter-sub-btn[data-config]').forEach(b => {
+                b.classList.toggle('active', b.dataset.config === 'all');
+            });
+            applyFilters();
+        });
+    });
+
+    // Config sub-filter (Vin 1)
+    document.querySelectorAll('.filter-sub-btn[data-config]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            currentConfigFilter = btn.dataset.config;
+            document.querySelectorAll('.filter-sub-btn[data-config]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
             applyFilters();
         });
     });
@@ -396,7 +438,7 @@ function renderRoomCard(room, index) {
         : null;
 
     return `
-        <div class="room-card animate-card" data-room-id="${room.id}" data-area="${room.area}" data-type="${room.roomType || 'studio'}" data-price="${room.price}" data-address="${(room.address || '').toLowerCase()}" data-title="${(room.title || '').toLowerCase()}" style="animation-delay: ${index * 0.08}s" id="room-card-${room.id}">
+        <div class="room-card animate-card" data-room-id="${room.id}" data-area="${room.area}" data-type="${room.roomType || 'studio'}" data-config="${room.roomConfig || ''}" data-price="${room.price}" data-address="${(room.address || '').toLowerCase()}" data-title="${(room.title || '').toLowerCase()}" style="animation-delay: ${index * 0.08}s" id="room-card-${room.id}">
             <div class="room-card-image watermark">
                 ${thumbnail
                     ? `<img src="${thumbnail}" alt="${room.title}" loading="lazy">`
@@ -1268,6 +1310,16 @@ function openRoomForm(room) {
                     </div>
                 </div>
 
+                <div class="form-group" id="form-config-group">
+                    <label class="form-label">Cấu hình phòng (Vin 1)</label>
+                    <select class="form-select" id="form-config">
+                        <option value="" ${!isEdit || !room.roomConfig ? 'selected' : ''}>Không chọn</option>
+                        <option value="1n" ${isEdit && room.roomConfig === '1n' ? 'selected' : ''}>Phòng 1N+</option>
+                        <option value="2n1wc" ${isEdit && room.roomConfig === '2n1wc' ? 'selected' : ''}>Phòng 2N1WC</option>
+                        <option value="3n2wc" ${isEdit && room.roomConfig === '3n2wc' ? 'selected' : ''}>Phòng 3N2WC</option>
+                    </select>
+                </div>
+
                 <div class="form-group">
                     <label class="form-label">Mô tả</label>
                     <textarea class="form-textarea" id="form-description" placeholder="Mô tả chi tiết về phòng trọ..." rows="5">${isEdit ? room.description : ''}</textarea>
@@ -1620,6 +1672,7 @@ async function saveRoomForm(editId, closeCallback) {
     const address = document.getElementById('form-address')?.value.trim();
     const description = document.getElementById('form-description')?.value.trim();
     const adminNote = document.getElementById('form-admin-note')?.value.trim();
+    const roomConfig = document.getElementById('form-config')?.value || null;
 
     // Validation
     if (!price || price <= 0) { showToast('Vui lòng nhập giá thuê hợp lệ', 'error'); return; }
@@ -1632,6 +1685,7 @@ async function saveRoomForm(editId, closeCallback) {
         moveInDate,
         area,
         roomType,
+        roomConfig,
         address,
         description: description || '',
         adminNote: adminNote || '',
