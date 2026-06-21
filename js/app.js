@@ -1492,11 +1492,21 @@ function bindModalEvents(editId) {
         }
     });
 
+    // Show/hide config group based on area
+    const configGroup = document.getElementById('form-config-group');
+    function toggleConfigGroup() {
+        if (configGroup) {
+            configGroup.style.display = areaSelect?.value === 'Vin 1' ? '' : 'none';
+        }
+    }
+    areaSelect?.addEventListener('change', toggleConfigGroup);
+
     function runAutoDetect(value) {
         if (!autoDetectCheckbox?.checked) return;
         const result = detectAreaFromAddress(value);
         if (result && areaSelect) {
             areaSelect.value = result.area;
+            toggleConfigGroup();
             if (detectResult) {
                 detectResult.innerHTML = `<span class="material-symbols-rounded" style="font-size:14px;vertical-align:middle;">check_circle</span> Nhận diện: <strong>${result.keyword}</strong> → ${result.area}`;
                 detectResult.style.color = '#059669';
@@ -1515,14 +1525,6 @@ function bindModalEvents(editId) {
         runAutoDetect(e.target.value);
     });
 
-    // Show/hide config group based on area
-    const configGroup = document.getElementById('form-config-group');
-    function toggleConfigGroup() {
-        if (configGroup) {
-            configGroup.style.display = areaSelect?.value === 'Vin 1' ? '' : 'none';
-        }
-    }
-    areaSelect?.addEventListener('change', toggleConfigGroup);
     toggleConfigGroup(); // Initial state
 
     // Run detection on load if editing
