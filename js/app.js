@@ -744,12 +744,12 @@ async function renderAdmin() {
                     Phòng đang hoạt động
                     <span class="admin-count-badge" id="admin-active-count">${activeRooms.length}</span>
                 </div>
-                <div class="bulk-action-bar" id="bulk-action-bar" style="display:none;">
+                <div class="bulk-action-bar" id="bulk-action-bar">
                     <label class="bulk-select-all">
                         <input type="checkbox" id="select-all-rooms">
                         <span>Chọn tất cả</span>
                     </label>
-                    <span class="bulk-selected-count" id="bulk-selected-count">0 phòng đã chọn</span>
+                    <span class="bulk-selected-count" id="bulk-selected-count"></span>
                     <button class="btn-danger btn-bulk-delete" id="btn-bulk-delete" disabled>
                         <span class="material-symbols-rounded" style="font-size:16px">delete_sweep</span>
                         Xóa đã chọn
@@ -972,9 +972,11 @@ async function renderAdmin() {
         const checked = document.querySelectorAll('#admin-active-list .room-select-cb:checked');
         const total = document.querySelectorAll('#admin-active-list .room-select-cb');
         const count = checked.length;
-        if (bulkBar) bulkBar.style.display = count > 0 ? '' : 'none';
-        if (bulkCountEl) bulkCountEl.textContent = `${count} phòng đã chọn`;
-        if (bulkDeleteBtn) bulkDeleteBtn.disabled = count === 0;
+        if (bulkCountEl) bulkCountEl.textContent = count > 0 ? `${count} phòng đã chọn` : '';
+        if (bulkDeleteBtn) {
+            bulkDeleteBtn.disabled = count === 0;
+            bulkDeleteBtn.style.display = count > 0 ? '' : 'none';
+        }
         if (selectAllCb) selectAllCb.checked = total.length > 0 && checked.length === total.length;
     }
 
