@@ -264,6 +264,7 @@ async function renderHome() {
                     <button class="config-btn active" data-config="all">Tất cả</button>
                     <button class="config-btn" data-config="1n">1N+</button>
                     <button class="config-btn" data-config="2n1wc">2N1WC</button>
+                    <button class="config-btn" data-config="2n2wc">2N2WC</button>
                     <button class="config-btn" data-config="3n2wc">3N2WC</button>
                 </div>
 
@@ -1404,6 +1405,13 @@ function openRoomForm(room) {
                             <span class="room-type-label">
                                 <span class="material-symbols-rounded">holiday_village</span>
                                 Phòng 3N2WC
+                            </span>
+                        </label>
+                        <label class="room-type-option">
+                            <input type="radio" name="roomConfig" value="2n2wc" ${isEdit && room.roomConfig === '2n2wc' ? 'checked' : ''}>
+                            <span class="room-type-label">
+                                <span class="material-symbols-rounded">apartment</span>
+                                Phòng 2N2WC
                             </span>
                         </label>
                     </div>
