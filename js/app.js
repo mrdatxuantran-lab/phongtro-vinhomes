@@ -439,6 +439,7 @@ function bindHomeEvents() {
 }
 
 function renderRoomCard(room, index) {
+    if (room.roomConfig) console.log('[CARD]', room.title, 'config=', room.roomConfig);
     const thumbnail = room.images && room.images.length > 0
         ? room.images[0]
         : null;
@@ -1774,6 +1775,7 @@ async function saveRoomForm(editId, closeCallback) {
     const adminNote = document.getElementById('form-admin-note')?.value.trim();
     const configVal = document.querySelector('input[name="roomConfig"]:checked')?.value;
     const roomConfig = configVal && configVal.trim() !== '' ? configVal : null;
+    console.log('[SAVE] roomConfig =', roomConfig, '| configVal =', configVal);
 
     // Validation
     if (!price || price <= 0) { showToast('Vui lòng nhập giá thuê hợp lệ', 'error'); return; }
