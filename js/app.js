@@ -216,24 +216,6 @@ async function renderHome() {
                     </button>
                 </div>
 
-                <div class="filter-sub-section" id="config-filter-section" style="display:none;">
-                    <button class="filter-btn filter-sub-btn active" data-config="all">
-                        <span>Tất cả</span>
-                    </button>
-                    <button class="filter-btn filter-sub-btn" data-config="1n">
-                        <span class="material-symbols-rounded" style="font-size:16px">bed</span>
-                        <span>Phòng 1N+</span>
-                    </button>
-                    <button class="filter-btn filter-sub-btn" data-config="2n1wc">
-                        <span class="material-symbols-rounded" style="font-size:16px">meeting_room</span>
-                        <span>Phòng 2N1WC</span>
-                    </button>
-                    <button class="filter-btn filter-sub-btn" data-config="3n2wc">
-                        <span class="material-symbols-rounded" style="font-size:16px">holiday_village</span>
-                        <span>Phòng 3N2WC</span>
-                    </button>
-                </div>
-
                 <div class="filter-section" id="type-filter-section">
                     <button class="filter-btn filter-btn-type" data-type="studio">
                         <span class="material-symbols-rounded" style="font-size:16px">apartment</span>
@@ -253,23 +235,31 @@ async function renderHome() {
                     </button>
                 </div>
 
-                <div class="search-address-wrapper" id="search-address-wrapper">
-                    <span class="material-symbols-rounded search-address-icon">search</span>
-                    <input type="text" class="search-address-input" id="search-address-input" placeholder="Tìm khu vực: VD Thời Đại, San Hô..." autocomplete="off">
-                    <button class="search-clear-btn hidden" id="search-clear-btn">
-                        <span class="material-symbols-rounded" style="font-size:18px">close</span>
-                    </button>
-                </div>
+                <div class="search-config-row">
+                    <div class="search-address-wrapper" id="search-address-wrapper">
+                        <span class="material-symbols-rounded search-address-icon">search</span>
+                        <input type="text" class="search-address-input" id="search-address-input" placeholder="Tìm khu vực: VD Thời Đại, San Hô..." autocomplete="off">
+                        <button class="search-clear-btn hidden" id="search-clear-btn">
+                            <span class="material-symbols-rounded" style="font-size:18px">close</span>
+                        </button>
+                    </div>
 
-                <div class="price-sort-wrapper" id="price-sort-wrapper">
-                    <span class="material-symbols-rounded price-sort-icon">sort</span>
-                    <select class="price-sort-select" id="price-sort-select">
-                        <option value="default">Sắp xếp giá</option>
-                        <option value="asc">Giá thấp → cao</option>
-                        <option value="desc">Giá cao → thấp</option>
-                    </select>
+                    <div class="config-filter-inline" id="config-filter-section" style="display:none;">
+                        <button class="config-btn active" data-config="all">Tất cả</button>
+                        <button class="config-btn" data-config="1n">1N+</button>
+                        <button class="config-btn" data-config="2n1wc">2N1WC</button>
+                        <button class="config-btn" data-config="3n2wc">3N2WC</button>
+                    </div>
+
+                    <div class="price-sort-wrapper" id="price-sort-wrapper">
+                        <span class="material-symbols-rounded price-sort-icon">sort</span>
+                        <select class="price-sort-select" id="price-sort-select">
+                            <option value="default">Sắp xếp giá</option>
+                            <option value="asc">Giá thấp → cao</option>
+                            <option value="desc">Giá cao → thấp</option>
+                        </select>
+                    </div>
                 </div>
-            </div>
 
             <div class="rooms-grid" id="rooms-grid">
                 ${activeRooms.map((room, index) => renderRoomCard(room, index)).join('')}
@@ -315,12 +305,24 @@ function applyFilters() {
     cards.forEach(card => {
         const area = card.dataset.area;
         const type = card.dataset.type;
-        const config = card.dataset.config || '';
         const address = card.dataset.address || '';
         const title = card.dataset.title || '';
         const matchArea = currentFilter === 'all' || area === currentFilter;
         const matchType = currentTypeFilter === 'all' || type === currentTypeFilter;
-        const matchConfig = currentConfigFilter === 'all' || config === currentConfigFilter;
+
+        // Config filter: match title text (1n, 2n1wc, 3n2wc)
+        // Normalize: remove spaces, lowercase → "1 N+" → "1n+", "2N 1WC" → "2n1wc"
+        let matchConfig = true;
+        if (currentConfigFilter !== 'all') {
+            const titleClean = title.replace(/\s+/g, '').toLowerCase();
+            if (currentConfigFilter === '1n') {
+                matchConfig = /1n\+?/.test(titleClean) && !/[23]n/.test(titleClean);
+            } else if (currentConfigFilter === '2n1wc') {
+                matchConfig = /2n1wc/.test(titleClean);
+            } else if (currentConfigFilter === '3n2wc') {
+                matchConfig = /3n2wc/.test(titleClean);
+            }
+        }
 
         // Match search: normalize address + title, compare
         let matchSearch = true;
@@ -376,7 +378,7 @@ function bindHomeEvents() {
             }
             // Reset config filter when switching area
             currentConfigFilter = 'all';
-            document.querySelectorAll('.filter-sub-btn[data-config]').forEach(b => {
+            document.querySelectorAll('.config-btn[data-config]').forEach(b => {
                 b.classList.toggle('active', b.dataset.config === 'all');
             });
             applyFilters();
@@ -384,10 +386,10 @@ function bindHomeEvents() {
     });
 
     // Config sub-filter (Vin 1)
-    document.querySelectorAll('.filter-sub-btn[data-config]').forEach(btn => {
+    document.querySelectorAll('.config-btn[data-config]').forEach(btn => {
         btn.addEventListener('click', () => {
             currentConfigFilter = btn.dataset.config;
-            document.querySelectorAll('.filter-sub-btn[data-config]').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.config-btn[data-config]').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             applyFilters();
         });
