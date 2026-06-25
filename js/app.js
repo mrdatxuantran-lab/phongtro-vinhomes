@@ -1156,7 +1156,6 @@ async function loadAnalyticsDashboard() {
             return roomMap[String(id)] || `Phòng #${String(id).substring(0, 6)}`;
         }
 
-        // Compute stats for a given period (sinceMs = epoch milliseconds)
         function computeStats(sinceMs) {
             const views = raw.allPageViews.filter(v => !sinceMs || new Date(v.created_at).getTime() >= sinceMs);
             const clicks = raw.allClicks.filter(c => !sinceMs || new Date(c.created_at).getTime() >= sinceMs);
@@ -1166,7 +1165,9 @@ async function loadAnalyticsDashboard() {
             const roomCounts = {};
             roomClicks.forEach(c => { roomCounts[c.room_id] = (roomCounts[c.room_id] || 0) + 1; });
             const topRooms = Object.entries(roomCounts).sort((a, b) => b[1] - a[1]);
-            return { pageViews: views.length, zalo, phone, roomViews: roomClicks.length, topRooms };
+            // Total page visits = page_views + room detail views
+            const totalVisits = views.length + roomClicks.length;
+            return { pageViews: totalVisits, zalo, phone, roomViews: roomClicks.length, topRooms };
         }
 
         const now = new Date();

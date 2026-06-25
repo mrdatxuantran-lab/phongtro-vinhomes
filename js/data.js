@@ -319,13 +319,27 @@ export async function trackClick(eventType, roomId = null) {
 }
 
 export async function getAnalyticsSummary() {
-    // Fetch all page views
-    const { data: allPageViews } = await supabase
-        .from('page_views').select('created_at');
+    // Helper: fetch ALL rows from a table (bypasses Supabase 1000-row limit)
+    async function fetchAll(table, selectCols) {
+        const PAGE_SIZE = 1000;
+        let all = [];
+        let offset = 0;
+        while (true) {
+            const { data, error } = await supabase
+                .from(table)
+                .select(selectCols)
+                .range(offset, offset + PAGE_SIZE - 1)
+                .order('created_at', { ascending: true });
+            if (error || !data || data.length === 0) break;
+            all = all.concat(data);
+            if (data.length < PAGE_SIZE) break; // last page
+            offset += PAGE_SIZE;
+        }
+        return all;
+    }
 
-    // Fetch all click events
-    const { data: allClicks } = await supabase
-        .from('click_events').select('event_type, room_id, created_at');
+    const allPageViews = await fetchAll('page_views', 'created_at');
+    const allClicks = await fetchAll('click_events', 'event_type, room_id, created_at');
 
     return { allPageViews: allPageViews || [], allClicks: allClicks || [] };
 }
